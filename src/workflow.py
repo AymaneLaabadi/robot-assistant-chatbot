@@ -29,21 +29,24 @@ class Workflow:
 
     def _stt_step(self, state: State) -> State:
         text = self.stt_service.transcribe(state.audio_input)
-        state.user_query = text
+        state.user_query = text if text else "Could not transcribe audio."
         return state
 
     def _rag_step(self, state: State) -> State:
-        docs = self.rag_service.retrieve(state.user_query)
-        state.retrieved_docs = docs
+        if not state.user_query:
+            state.retrieved_docs = ["No query provided, so no documents retrieved."]
+            return state
+        docs = self.rag_service.search(state["user_query"], k=3)
+        state["retrieved_docs"] = docs
         return state
 
-
     def _llm_step(self, state: State) -> State:
-        answer = self.llm_service.generate(
-            query=state.user_query,
-            context=state.retrieved_docs
+        print("--- GENERATING RESPONSE ---")
+        response = self.llm_service.generate(
+            query=state["user_query"], 
+            documents=state["retrieved_docs"]
         )
-        state.response = answer
+        state["response"] = response
         return state
 
     def run(self, audio: bytes) -> str:
