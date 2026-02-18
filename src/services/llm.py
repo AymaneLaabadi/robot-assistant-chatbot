@@ -1,53 +1,70 @@
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
+# services/llm_service.py
+
+from typing import Optional, List
 from dotenv import load_dotenv
-from typing import List, Dict, Optional
+
+from langchain_groq import ChatGroq
+from langchain.tools import tool
+from langchain.agents import create_agent
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import BaseMessage
+from langchain_core.documents import Document
+
+from src.services.rag import RAGService
 
 load_dotenv(override=True)
 
 
 class LLMService:
-    def __init__(self):
+    def __init__(self, rag_service: RAGService):
+        # Initialize RAG service
+        self.rag = rag_service
+
+        # Groq model
         self.llm = ChatGroq(
             model="openai/gpt-oss-20b",
             temperature=0.3,
-            max_retries=2,
+            max_retries=3,
         )
 
-    def generate(self, query: str, documents: list, history: Optional[List[Dict]] = None) -> str:
-        """
-        Processes documents and optional chat history into a string and generates a response.
-        `history` is a list of dicts with keys `role` and `text`.
-        """
-        # Extract page_content from Document objects if they aren't strings yet
-        context_text = "\n\n".join(
-            [doc.page_content if hasattr(doc, "page_content") else str(doc) for doc in (documents or [])]
+        # RAG search as a tool
+        @tool("document_retriever")
+        def retrieval_tool(query: str) -> str:
+            """
+            Search the internal knowledge base for relevant documents.
+            Use this when answering questions about EMINES school programs, UM6P or any related information.
+            """
+            docs: List[Document] = self.rag.search(query, k=3)
+
+            if not docs:
+                return "No relevant documents found."
+
+            return "\n\n".join([doc.page_content for doc in docs])
+    
+        tools = [retrieval_tool]
+
+        # Agent prompt
+        system_prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are a professional AI assistant for the EMINES school.\n"
+                    "You have access to a RAG tool.\n"
+                    "When needed, use document_retriever to retrieve relevant information.\n"
+                    "Base your answers strictly on retrieved content when possible.\n"
+                    "If the information is not found, clearly say so."
+                ),
+                MessagesPlaceholder(variable_name="chat_history"),
+                ("human", "{input}"),
+                MessagesPlaceholder(variable_name="agent_scratchpad"),
+            ]
         )
 
-        # Build a history string to help the model remember the conversation
-        history_text = "\n".join([
-            f"{m.get('role')}: {m.get('text')}" for m in (history or [])
-        ])
+        self.agent = create_agent(self.llm, tools=tools, system_prompt=system_prompt)
 
-        # Include history followed by retrieved context
-        full_context = "".join([
-            (history_text + "\n\n") if history_text else "",
-            ("Documents:\n" + context_text) if context_text else "",
-        ])
 
-        prompt = ChatPromptTemplate.from_messages([
-            (
-                "system",
-                "You are a professional assistant. Use the conversation history and the following context to answer the user's question. If the answer isn't in the context or history, say you don't know based on the documents, but offer general help if appropriate.",
-            ),
-            ("human", "Conversation and Context:\n{context}\n\nQuestion: {query}"),
-        ])
-
-        chain = prompt | self.llm
-
-        response = chain.invoke({
-            "context": full_context,
-            "query": query,
-        })
-
-        return response.content
+    def generate(self, query: str, chat_history: Optional[List[BaseMessage]] = None) -> str:
+        messages = [{"role": "user", "content": query}]
+        response = self.agent.invoke({"messages": messages})
+        return response["output"]
+    
