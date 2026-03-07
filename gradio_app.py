@@ -18,7 +18,8 @@ def submit_message(user_text: str, conv_id: str, chat_history: list):
 
     resp = wf.run_text(user_text, conversation_id=conv_id)
     chat_history = chat_history or []
-    chat_history.append((user_text, resp))
+    chat_history.append({"role": "user", "content": user_text})
+    chat_history.append({"role": "assistant", "content": resp})
     return conv_id, chat_history
 
 
