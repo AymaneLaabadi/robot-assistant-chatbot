@@ -6,13 +6,20 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.tools import tool
 from langchain.agents import create_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.documents import Document
 
 from src.services.rag import RAGService
 
 load_dotenv(override=True)
+
+SYSTEM_PROMPT = (
+    "You are a professional AI assistant for the EMINES school.\n"
+    "You have access to a RAG tool.\n"
+    "When needed, use document_retriever to retrieve relevant information.\n"
+    "Base your answers strictly on retrieved content when possible.\n"
+    "If the information is not found, clearly say so."
+)
 
 
 class LLMService:
@@ -43,28 +50,14 @@ class LLMService:
     
         tools = [retrieval_tool]
 
-        # Agent prompt
-        system_prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    "You are a professional AI assistant for the EMINES school.\n"
-                    "You have access to a RAG tool.\n"
-                    "When needed, use document_retriever to retrieve relevant information.\n"
-                    "Base your answers strictly on retrieved content when possible.\n"
-                    "If the information is not found, clearly say so."
-                ),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("human", "{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
-            ]
-        )
-
-        self.agent = create_agent(self.llm, tools=tools, system_prompt=system_prompt)
+        self.agent = create_agent(self.llm, tools=tools, system_prompt=SYSTEM_PROMPT)
 
 
     def generate(self, query: str, chat_history: Optional[List[BaseMessage]] = None) -> str:
-        messages = [{"role": "user", "content": query}]
+        messages = list(chat_history or [])
+        messages.append(HumanMessage(content=query))
         response = self.agent.invoke({"messages": messages})
-        return response["output"]
+        # The agent returns {"messages": [...]}, last AI message is the answer
+        ai_message = response["messages"][-1]
+        return ai_message.content
     
