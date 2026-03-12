@@ -1,0 +1,26 @@
+[
+    {
+            "location_name": "Cafeteria",
+            "description": "A place where you can get food and drinks. It is located in the main building of EMINES, near the reception hall.",
+            "coordinates": {
+                "latitude": 40.712776,
+                "longitude": -80.789974
+            }
+        },
+        {
+            "location_name": "Student Lounge",
+            "description": "A place where students can relax and socialize. It is located in the main building of EMINES, on the ground floor.",
+            "coordinates": {
+                "latitude": 53.2547850,
+                "longitude": -74.006974
+            }
+        },
+        {
+            "location_name": "Direction",
+            "description": "The management office of EMINES, where you can find the administrative staff and get help with any issues related to your studies.",
+            "coordinates": {
+                "latitude": 16.218774,
+                "longitude": -11.234567
+            }
+        }
+]

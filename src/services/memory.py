@@ -23,6 +23,9 @@ class MemoryService:
         if not p.exists():
             p.write_text(json.dumps([]))
 
+    def exists(self, conversation_id: str) -> bool:
+        return self._path(conversation_id).exists()
+    
     def clear(self, conversation_id: str) -> None:
         p = self._path(conversation_id)
         if p.exists():
@@ -38,7 +41,7 @@ class MemoryService:
                 msgs = []
         entry = {"role": role, "text": text, "ts": datetime.utcnow().isoformat()}
         msgs.append(entry)
-        p.write_text(json.dumps(msgs, ensure_ascii=False, indent=2))
+        p.write_text(json.dumps(msgs, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def get_messages(self, conversation_id: str, limit: Optional[int] = None) -> List[Dict]:
         p = self._path(conversation_id)

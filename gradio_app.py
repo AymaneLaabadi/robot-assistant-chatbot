@@ -8,18 +8,22 @@ wf = Workflow()
 def new_conversation():
     conv = str(uuid.uuid4())
     wf.memory_service.create(conv)
+    # return the new conversation id and an empty chat history
     return conv, []
 
 
 def submit_message(user_text: str, conv_id: str, chat_history: list):
+    # Ensure we have a conversation id
     if not conv_id:
         conv_id = str(uuid.uuid4())
         wf.memory_service.create(conv_id)
 
-    resp = wf.run_text(user_text, conversation_id=conv_id)
-    chat_history = chat_history or []
-    chat_history.append((user_text, resp))
-    return conv_id, chat_history
+    # Run through the workflow; it returns the full gradio-history as list of (user, assistant) tuples
+    gr_history = wf.run_text(user_text, conversation_id=conv_id)
+
+    # gradio Chatbot expects a list of (user, assistant) tuples; return that
+    # Optionally, you could merge with the passed-in chat_history (but we trust memory as source of truth)
+    return conv_id, gr_history
 
 
 with gr.Blocks() as demo:

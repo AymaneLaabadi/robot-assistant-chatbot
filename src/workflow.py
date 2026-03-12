@@ -49,7 +49,7 @@ class Workflow:
         return state
 
     def _llm_step(self, state: State) -> State:
-        print("--- GENERATING RESPONSE ---")
+        print("--- GENERATING RESPONSE (agentic) ---")
 
         conv_id = getattr(state, "conversation_id", None)
 
@@ -69,6 +69,7 @@ class Workflow:
         response = self.llm_service.generate(
             query=state.user_query,
             chat_history=chat_history,
+            tool_inputs={"query": state.user_query}
         )
         state.response = response
 
@@ -83,16 +84,58 @@ class Workflow:
     # PUBLIC METHODS
     # ---------------------------------------------------
 
-    def run_text(self, text: str, conversation_id: str = None) -> str:
+    def run_text(self, text: str, conversation_id: str = None):
+        """
+        Run a single text input through the workflow, store in memory,
+        and return a plain chat history as a list of dictionaries: {"role": "user|assistant", "content": str}.
+        """
+        # Initialize state
         state = State(user_query=text, conversation_id=conversation_id)
 
-        if conversation_id:
+        # Create memory if conversation_id is provided
+        if conversation_id and not self.memory_service.exists(conversation_id):
             self.memory_service.create(conversation_id)
 
-        # Direct LLM (agent handles retrieval internally)
-        state = self._llm_step(state)
+        # --- Generate response ---
+        print("--- GENERATING RESPONSE (run_text) ---")
+        conv_id = getattr(state, "conversation_id", None)
 
-        return state.response
+        # Retrieve last messages from memory and convert to LangChain messages
+        chat_history = []
+        if conv_id:
+            stored_messages = self.memory_service.get_messages(conv_id, limit=10)
+            for m in stored_messages:
+                if m["role"] == "user":
+                    chat_history.append(HumanMessage(content=m["text"]))
+                elif m["role"] == "assistant":
+                    chat_history.append(AIMessage(content=m["text"]))
+
+        # Generate reply from LLM using the higher-level API (returns a string)
+        reply = self.llm_service.generate(query=state.user_query, chat_history=chat_history)
+
+        # Keep raw text (no HTML formatting)
+        state.response = reply
+
+        # Persist memory
+        if conv_id:
+            self.memory_service.add_message(conv_id, "user", text)
+            self.memory_service.add_message(conv_id, "assistant", reply or "")
+
+        # --- Prepare output as a list of dicts ---
+        history = []
+        if conv_id:
+            all_mem = self.memory_service.get_messages(conv_id)
+            for m in all_mem:
+                history.append({
+                    "role": m["role"],
+                    "content": m["text"]
+                })
+
+        # Append latest if not present
+        if not history:
+            history.append({"role": "assistant", "content": reply or ""})
+
+        return history
 
     def run(self, audio: bytes, conversation_id: str = None) -> str:
         initial_state = State(audio_input=audio)
