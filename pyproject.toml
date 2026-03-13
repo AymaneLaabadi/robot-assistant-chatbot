@@ -23,4 +23,5 @@ dependencies = [
     "gradio>=3.45.0",
     "sentence-transformers>=2.2.2",
     "rapidfuzz>=3.14.3",
+    "fuzzywuzzy>=0.18.0",
 ]

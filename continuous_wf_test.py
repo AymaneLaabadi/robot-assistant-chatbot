@@ -24,7 +24,7 @@ def main():
             print("Recording...")
 
             # Record audio
-            file_path = record(seconds=5)
+            file_path = record(seconds=10)
 
             # Transcribe
             user_query = stt.transcribe(file_path)

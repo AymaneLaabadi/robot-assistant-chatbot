@@ -10,34 +10,44 @@ class NavigationService:
         self.history_file = history_file
 
     def get_coordinates(self, user_input: str):
+        # Load locations (your existing logic)
         with open(self.locations_file, "r") as f:
             locations = json.load(f)
 
-        # Build a mapping of location names and aliases to their coordinates
+        # Build mapping of names + aliases to coordinates
         name_to_coords = {}
         for loc in locations:
             coords = (loc["coordinates"]["latitude"], loc["coordinates"]["longitude"])
             name_to_coords[loc["location_name"].lower()] = coords
-            if "aliases" in loc:
-                for alias in loc["aliases"]:
-                    name_to_coords[alias.lower()] = coords
+            for alias in loc.get("aliases", []):
+                name_to_coords[alias.lower()] = coords
 
-        # Use fuzzy matching to find the closest location
+        # Fuzzy match
         match, score, _ = process.extractOne(user_input.lower(), name_to_coords.keys(), scorer=fuzz.WRatio)
-        if score < 60:  # threshold can be tuned
-            return None, None  # no good match
-        
-        # Add coordinates to the navigation history
+        if score < 60:
+            return None, None
+
         lat, long = name_to_coords[match]
-        with open(self.history_file, "a") as f:
-            history = json.load(f)
-            # Append new entry
-            history.append({
-                "location": user_input,
-                "date": datetime.utcnow().isoformat(),
-                "coordinates": {"latitude": lat, "longitude": long}
-            })
+
+        # --- FIX: read history in read mode ---
+        try:
+            with open(self.history_file, "r") as f:
+                try:
+                    history = json.load(f)
+                except json.JSONDecodeError:
+                    history = []
+        except FileNotFoundError:
+            history = []
+
+        # Append new entry
+        history.append({
+            "location": user_input,
+            "date": datetime.utcnow().isoformat(),
+            "coordinates": {"latitude": lat, "longitude": long}
+        })
+
+        # Save entire array back
         with open(self.history_file, "w") as f:
             json.dump(history, f, indent=4)
 
-        return name_to_coords[match]            
+        return name_to_coords[match]

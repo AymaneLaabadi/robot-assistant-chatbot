@@ -15,7 +15,7 @@ def main():
     conversation_id = str(uuid.uuid4())  
     
     # Record audio and transcribe via recorder service
-    file_path = record(seconds=5)
+    file_path = record(seconds=10) 
     stt = SpeechToTextService()
     user_query = stt.transcribe(file_path)
 
