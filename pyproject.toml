@@ -24,4 +24,5 @@ dependencies = [
     "pyttsx3>=2.98",
     "gtts>=2.5.4",
     "langchain-chroma>=1.1.0",
+    "faster-whisper>=1.2.1",
 ]
