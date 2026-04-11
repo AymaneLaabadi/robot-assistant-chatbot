@@ -815,5 +815,31 @@
                 "floor": "RDC"
             }
         }
+    },
+    {
+        "location": "Cafétéria",
+        "matched_name": "Cafétéria",
+        "category": "Alimentation",
+        "date": "2026-04-11T14:44:51.158451+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7132,
+            "longitude": -74.0064
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Cafétéria",
+                "matched_name": "Cafétéria",
+                "coordinates": {
+                    "latitude": 40.7132,
+                    "longitude": -74.0064
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
     }
 ]

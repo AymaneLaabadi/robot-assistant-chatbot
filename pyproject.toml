@@ -1,7 +1,7 @@
 [project]
 name = "robot-assistant-chatbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "The UI app for the robot assistant of EMINES - class 2027"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -25,4 +25,5 @@ dependencies = [
     "gtts>=2.5.4",
     "langchain-chroma>=1.1.0",
     "faster-whisper>=1.2.1",
+    "edge-tts>=7.2.8",
 ]
