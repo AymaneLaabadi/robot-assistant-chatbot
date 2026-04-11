@@ -126,7 +126,7 @@
     }
   },
   {
-    "location_name": "Centre de santé",
+    "location_name": "Health Center",
     "category": "Santé",
     "aliases": [
       "sante",
@@ -135,7 +135,8 @@
       "centre medical",
       "health center",
       "medical center",
-      "clinic"
+      "clinic",
+      "centre de santé"
     ],
     "description": "Services médicaux et counselling santé pour les étudiants et le personnel.",
     "building": "Bâtiment Emines",

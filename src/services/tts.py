@@ -1,10 +1,12 @@
 from cartesia import Cartesia
 import os
-
+import tempfile
+from pathlib import Path
 
 class TTSService:
     def __init__(self):
         self.client = Cartesia(api_key=os.getenv("CARTESIA_API_KEY"))
+
 
     def synthesize(self, text: str):
         text = " ".join(text.split())
@@ -12,7 +14,6 @@ class TTSService:
             return None, "audio/wav"
 
         language = self._detect_language(text)
-
         voice_id = self._get_voice_id(language)
 
         response = self.client.tts.generate(
@@ -29,12 +30,20 @@ class TTSService:
             },
         )
 
-        audio_bytes = response.write_to_file("output.wav")
+        # Create safe temp file
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            temp_path = Path(tmp.name)
 
-        with open("output.wav", "rb") as f:
-            audio = f.read()
+        # write audio to temp file
+        response.write_to_file(str(temp_path))
 
-        return audio, "audio/wav"
+        # read back bytes
+        audio_bytes = temp_path.read_bytes()
+
+        # cleanup
+        temp_path.unlink(missing_ok=True)
+
+        return audio_bytes, "audio/wav"
 
     # ======================================================
     # VOICE SELECTION (your logic preserved)
