@@ -841,5 +841,57 @@
                 "floor": "RDC"
             }
         }
+    },
+    {
+        "location": "Administration",
+        "matched_name": "Administration",
+        "category": "Administratif",
+        "date": "2026-04-11T15:35:02.763429+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Administration",
+                "matched_name": "Administration",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Administration",
+        "matched_name": "Administration",
+        "category": "Administratif",
+        "date": "2026-04-11T15:45:18.386496+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Administration",
+                "matched_name": "Administration",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
     }
 ]
