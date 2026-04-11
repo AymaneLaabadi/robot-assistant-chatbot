@@ -13,7 +13,6 @@ class RAGService:
         # Using OpenAI embeddings by default; can be swapped for HuggingFace
         self.embeddings = HuggingFaceEmbeddings(
                     model_name=model_name,
-                    model_kwargs={'device': 'cpu'},
                     encode_kwargs={'normalize_embeddings': True}
                 )
         
