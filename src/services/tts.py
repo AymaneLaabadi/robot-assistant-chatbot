@@ -63,45 +63,34 @@ class TTSService:
     def _detect_language(self, text: str) -> str:
         text = text.lower()
 
-        # =========================
         # FREQUENT WORD LISTS
-        # =========================
-
         french_words = {
             "bonjour", "salut", "merci", "oui", "non", "où", "comment",
             "je", "tu", "il", "elle", "nous", "vous", "ils", "est",
             "aller", "faire", "pouvez", "s'il", "vous", "aide", "robot",
             "station", "destination"
         }
-
         english_words = {
             "hello", "hi", "thanks", "yes", "no", "where", "how",
             "I","i", "you", "he", "she", "we", "they", "is", "are",
             "go", "help", "robot", "station", "floor",
             "can", "please", "navigate", "destination"
         }
-
         arabic_words = {
             "مرحبا", "السلام", "نعم", "لا", "أين", "كيف", "سلام"
             "أنا", "أنت", "هو", "هي", "نحن", "أنتم",
             "مساعدة", "روبوت", "توجه", "اذهب", "شكرا", "هل"
         }
 
-        # =========================
         # TOKENIZE TEXT
-        # =========================
         words = set(text.split())
 
-        # =========================
         # SCORE EACH LANGUAGE
-        # =========================
         fr_score = len(words & french_words)
         en_score = len(words & english_words)
         ar_score = len(words & arabic_words)
 
-        # =========================
         # DECISION LOGIC
-        # =========================
         if ar_score > fr_score and ar_score > en_score:
             return "ar"
         if fr_score > en_score and fr_score > ar_score:

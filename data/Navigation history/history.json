@@ -1,3 +1,262 @@
 [
-    
+    {
+        "location": "Cafétéria",
+        "matched_name": "Cafétéria",
+        "category": "Alimentation",
+        "date": "2026-04-11T18:52:03.620697+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7132,
+            "longitude": -74.0064
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Cafétéria",
+                "matched_name": "Cafétéria",
+                "coordinates": {
+                    "latitude": 40.7132,
+                    "longitude": -74.0064
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Administration",
+        "matched_name": "Administration",
+        "category": "Administratif",
+        "date": "2026-04-11T18:55:01.139913+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Administration",
+                "matched_name": "Administration",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Cafétéria",
+        "matched_name": "Cafétéria",
+        "category": "Alimentation",
+        "date": "2026-04-17T06:03:09.045736+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7132,
+            "longitude": -74.0064
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Cafétéria",
+                "matched_name": "Cafétéria",
+                "coordinates": {
+                    "latitude": 40.7132,
+                    "longitude": -74.0064
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Administration",
+        "matched_name": "Administration",
+        "category": "Administratif",
+        "date": "2026-04-17T06:04:28.231401+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Administration",
+                "matched_name": "Administration",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Accueil",
+        "matched_name": "Accueil",
+        "category": "Administratif",
+        "date": "2026-04-17T06:20:12.740595+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Accueil",
+                "matched_name": "Accueil",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Administration",
+        "matched_name": "Administration",
+        "category": "Administratif",
+        "date": "2026-04-17T06:30:19.390176+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Administration",
+                "matched_name": "Administration",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Administration",
+        "matched_name": "Administration",
+        "category": "Administratif",
+        "date": "2026-04-17T06:31:40.119993+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7128,
+            "longitude": -74.006
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Administration",
+                "matched_name": "Administration",
+                "coordinates": {
+                    "latitude": 40.7128,
+                    "longitude": -74.006
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Cafétéria",
+        "matched_name": "Cafétéria",
+        "category": "Alimentation",
+        "date": "2026-04-17T06:35:57.546861+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7132,
+            "longitude": -74.0064
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Cafétéria",
+                "matched_name": "Cafétéria",
+                "coordinates": {
+                    "latitude": 40.7132,
+                    "longitude": -74.0064
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Cafétéria",
+        "matched_name": "Cafétéria",
+        "category": "Alimentation",
+        "date": "2026-04-17T06:42:00.635171+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7132,
+            "longitude": -74.0064
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Cafétéria",
+                "matched_name": "Cafétéria",
+                "coordinates": {
+                    "latitude": 40.7132,
+                    "longitude": -74.0064
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    },
+    {
+        "location": "Cafétéria",
+        "matched_name": "Cafétéria",
+        "category": "Alimentation",
+        "date": "2026-04-17T07:16:31.701477+00:00",
+        "requested_by": "llm_agent",
+        "coordinates": {
+            "latitude": 40.7132,
+            "longitude": -74.0064
+        },
+        "dispatch": {
+            "status": "placeholder",
+            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
+            "api_url": null,
+            "command_payload": {
+                "destination": "Cafétéria",
+                "matched_name": "Cafétéria",
+                "coordinates": {
+                    "latitude": 40.7132,
+                    "longitude": -74.0064
+                },
+                "building": "Bâtiment Emines",
+                "floor": "RDC"
+            }
+        }
+    }
 ]

@@ -5,7 +5,7 @@ from datetime import datetime
 import streamlit as st
 
 from src.components.voice_assistant import voice_assistant_orb
-from src.components.voice_bridge import VoiceBridgeServer
+from src.components.voice_bridge import handle_voice_request
 from src.workflow import Workflow
 
 
@@ -502,11 +502,6 @@ def get_assistant() -> Workflow:
     return st.session_state._assistant
 
 
-def get_voice_bridge() -> VoiceBridgeServer:
-    if "_voice_bridge" not in st.session_state:
-        st.session_state._voice_bridge = VoiceBridgeServer()
-    return st.session_state._voice_bridge
-
 
 def init_session_state(assistant: Workflow) -> None:
     if "chat_conversation_id" not in st.session_state:
@@ -520,6 +515,7 @@ def init_session_state(assistant: Workflow) -> None:
     st.session_state.setdefault("selected_destination", None)
     st.session_state.setdefault("robot_status", "Prêt")
     st.session_state.setdefault("last_navigation_command", None)
+    st.session_state.setdefault("voice_response", None)
     st.session_state.setdefault("last_voice_error", None)
     st.session_state.setdefault("last_voice_response", "")
     st.session_state.setdefault("last_voice_transcription", "")
@@ -555,6 +551,7 @@ def new_chat_conversation(assistant: Workflow) -> None:
 def new_audio_conversation(assistant: Workflow) -> None:
     st.session_state.audio_conversation_id = str(uuid.uuid4())
     assistant.memory_service.create(st.session_state.audio_conversation_id)
+    st.session_state.voice_response = None   
     st.session_state.last_voice_error = None
     st.session_state.last_voice_response = ""
     st.session_state.last_voice_transcription = ""
@@ -906,7 +903,7 @@ def render_chat_widget(assistant: Workflow) -> None:
         st.rerun(scope="fragment")
 
 
-def render_voice_widget(assistant: Workflow, bridge: VoiceBridgeServer) -> None:
+def render_voice_widget(assistant: Workflow) -> None:
     with st.container(key="voice_widget_panel"):
         top_cols = st.columns([6.5, 0.9, 0.9])
         with top_cols[0]:
@@ -930,17 +927,43 @@ def render_voice_widget(assistant: Workflow, bridge: VoiceBridgeServer) -> None:
         component_result = voice_assistant_orb(
             key="voice_assistant_orb_component",
             data={
-                "api_port": bridge.port,
                 "conversation_id": st.session_state.audio_conversation_id,
                 "reset_token": st.session_state.voice_reset_token,
+                "response": st.session_state.get("voice_response"),
             },
         )
 
-        voice_result = state_value(component_result, "voice_result")
-        if voice_result:
-            nonce = voice_result.get("nonce")
+        voice_input = state_value(component_result, "voice_input")
+
+        if voice_input:
+            nonce = voice_input.get("nonce")
+
             if nonce != st.session_state.last_voice_event_nonce:
                 st.session_state.last_voice_event_nonce = nonce
+
+                response = handle_voice_request(voice_input)
+
+                st.session_state.voice_response = {
+                    "nonce": nonce,
+                    **response
+                }
+
+                if "error" in response:
+                    st.session_state.last_voice_error = response["error"]
+                    st.session_state.robot_status = "Erreur vocale"
+                else:
+                    st.session_state.last_voice_response = response.get("response", "") or ""
+                    st.session_state.last_voice_transcription = response.get("transcription", "") or ""
+                    st.session_state.robot_status = "Réponse vocale en cours"
+
+                st.rerun(scope="fragment")
+
+        voice_result = state_value(component_result, "voice_result")
+
+        if voice_result:
+            nonce = voice_result.get("nonce")
+            if nonce != st.session_state.last_playback_nonce:
+                st.session_state.last_playback_nonce = nonce
                 st.session_state.last_voice_response = voice_result.get("response", "") or ""
                 st.session_state.last_voice_transcription = voice_result.get("transcription", "") or ""
                 st.session_state.last_voice_error = None
@@ -951,7 +974,7 @@ def render_voice_widget(assistant: Workflow, bridge: VoiceBridgeServer) -> None:
         if playback_finished and playback_finished != st.session_state.last_playback_nonce:
             st.session_state.last_playback_nonce = playback_finished
             st.session_state.robot_status = "Prêt"
-            # remove: st.rerun(scope="fragment")
+            st.session_state.voice_response = None
 
         voice_error = state_value(component_result, "error")
         if voice_error:
@@ -1004,7 +1027,7 @@ def render_navigation_fragment(assistant: Workflow) -> None:
 
 
 @st.fragment
-def render_assistant_fragment(assistant: Workflow, bridge: VoiceBridgeServer) -> None:
+def render_assistant_fragment(assistant: Workflow) -> None:
     if st.session_state.chat_panel_open:
         with st.container(key="floating_chat_panel"):
             render_chat_widget(assistant)
@@ -1012,7 +1035,7 @@ def render_assistant_fragment(assistant: Workflow, bridge: VoiceBridgeServer) ->
 
     if st.session_state.voice_panel_open:
         with st.container(key="floating_voice_panel"):
-            render_voice_widget(assistant, bridge)
+            render_voice_widget(assistant)
         return
 
     render_assistant_dock()
@@ -1021,12 +1044,11 @@ def render_assistant_fragment(assistant: Workflow, bridge: VoiceBridgeServer) ->
 def main() -> None:
     inject_styles()
     assistant = get_assistant()
-    bridge = get_voice_bridge()
     init_session_state(assistant)
 
     render_header()
     render_navigation_fragment(assistant)
-    render_assistant_fragment(assistant, bridge)
+    render_assistant_fragment(assistant)
 
 
 if __name__ == "__main__":

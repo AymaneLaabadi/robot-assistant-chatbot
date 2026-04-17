@@ -104,9 +104,7 @@ export default function(component) {
     const status = parentElement.querySelector('.voice-status');
     const hint = parentElement.querySelector('.voice-hint');
 
-    if (!orb || !status || !hint) {
-        return;
-    }
+    if (!orb || !status || !hint) return;
 
     let mediaRecorder = component.__mediaRecorder || null;
     let mediaStream = component.__mediaStream || null;
@@ -114,7 +112,12 @@ export default function(component) {
     let currentAudio = component.__currentAudio || null;
     let isBusy = component.__isBusy || false;
     let lastRequestNonce = component.__lastRequestNonce || null;
+    let lastHandledResponseNonce = component.__lastHandledResponseNonce || null;
 
+
+    // =========================
+    // UI STATE
+    // =========================
     const resetVisualState = () => {
         orb.classList.remove('listening', 'processing', 'speaking');
         status.textContent = 'Prêt';
@@ -123,13 +126,14 @@ export default function(component) {
 
     const setVisualState = (mode, label, hintText) => {
         orb.classList.remove('listening', 'processing', 'speaking');
-        if (mode) {
-            orb.classList.add(mode);
-        }
+        if (mode) orb.classList.add(mode);
         status.textContent = label;
         hint.textContent = hintText;
     };
 
+    // =========================
+    // UTILS
+    // =========================
     const blobToBase64 = (blob) =>
         new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -143,182 +147,198 @@ export default function(component) {
 
     const stopTracks = () => {
         if (mediaStream) {
-            mediaStream.getTracks().forEach((track) => track.stop());
+            mediaStream.getTracks().forEach((t) => t.stop());
             mediaStream = null;
             component.__mediaStream = null;
         }
     };
 
-    const apiUrl = () => {
-        const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-        const hostname = window.location.hostname || '127.0.0.1';
-        return `${protocol}//${hostname}:${data.api_port}/voice`;
-    };
-
+    // =========================
+    // 🔥 SEND TO STREAMLIT (NO FETCH)
+    // =========================
     const sendRecording = async (blob, mimeType) => {
         const audioBase64 = await blobToBase64(blob);
         const nonce = Date.now();
+
         lastRequestNonce = nonce;
         component.__lastRequestNonce = nonce;
+
         isBusy = true;
         component.__isBusy = true;
+
         setVisualState('processing', 'Traitement...', 'Le robot prépare sa réponse.');
 
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 45000);
-
-        try {
-            const response = await fetch(apiUrl(), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    audio_base64: audioBase64,
-                    mime_type: mimeType,
-                    conversation_id: data.conversation_id,
-                }),
-                signal: controller.signal,
-            });
-
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload.error || 'Le traitement vocal a échoué.');
-            }
-
-            setTriggerValue('voice_result', {
-                nonce,
-                response: payload.response || '',
-                transcription: payload.transcription || '',
-            });
-
-            if (!payload.response_audio_base64) {
-                isBusy = false;
-                component.__isBusy = false;
-                setVisualState('', 'Réponse prête', 'Le robot a répondu sans audio.');
-                return;
-            }
-
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-
-            currentAudio = new Audio(`data:${payload.response_audio_mime_type || 'audio/mp3'};base64,${payload.response_audio_base64}`);
-            component.__currentAudio = currentAudio;
-            setVisualState('speaking', 'Réponse vocale', 'Le robot vous répond maintenant.');
-
-            currentAudio.onended = () => {
-                isBusy = false;
-                component.__isBusy = false;
-                resetVisualState();
-                setTriggerValue('playback_finished', nonce);
-            };
-
-            currentAudio.onerror = () => {
-                isBusy = false;
-                component.__isBusy = false;
-                setVisualState('', 'Lecture bloquée', 'La réponse audio est prête, mais la lecture a échoué.');
-                setTriggerValue('error', 'Audio playback failed.');
-            };
-
-            await currentAudio.play();
-        } catch (error) {
-            isBusy = false;
-            component.__isBusy = false;
-            setVisualState('', 'Erreur vocale', 'Réessayez après quelques secondes.');
-            setTriggerValue('error', String(error));
-        } finally {
-            window.clearTimeout(timeout);
-        }
+        setTriggerValue('voice_input', {
+            nonce,
+            audio_base64: audioBase64,
+            mime_type: mimeType,
+            conversation_id: data.conversation_id,
+        });
     };
 
+    // =========================
+    // 🎤 RECORDING
+    // =========================
     const startRecording = async () => {
         try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('Microphone access is not supported by this browser.');
+            if (!navigator.mediaDevices?.getUserMedia) {
+                throw new Error('Microphone not supported.');
             }
 
             mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             component.__mediaStream = mediaStream;
 
             let mimeType = '';
-            if (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
                 mimeType = 'audio/webm;codecs=opus';
-            } else if (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/webm')) {
+            } else if (MediaRecorder.isTypeSupported('audio/webm')) {
                 mimeType = 'audio/webm';
             }
 
-            mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+            mediaRecorder = mimeType
+                ? new MediaRecorder(mediaStream, { mimeType })
+                : new MediaRecorder(mediaStream);
+
             component.__mediaRecorder = mediaRecorder;
+
             chunks = [];
             component.__chunks = chunks;
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data && event.data.size > 0) {
-                    chunks.push(event.data);
-                }
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data?.size > 0) chunks.push(e.data);
             };
 
             mediaRecorder.onstop = async () => {
                 try {
-                    const actualMimeType = mediaRecorder.mimeType || 'audio/webm';
-                    const blob = new Blob(chunks, { type: actualMimeType });
+                    const actualMime = mediaRecorder.mimeType || 'audio/webm';
+                    const blob = new Blob(chunks, { type: actualMime });
                     stopTracks();
-                    await sendRecording(blob, actualMimeType);
-                } catch (error) {
+                    await sendRecording(blob, actualMime);
+                } catch (err) {
                     isBusy = false;
                     component.__isBusy = false;
-                    setVisualState('', 'Capture impossible', 'Veuillez réessayer.');
-                    setTriggerValue('error', String(error));
+                    setVisualState('', 'Erreur capture', 'Veuillez réessayer.');
+                    setTriggerValue('error', String(err));
                 }
             };
 
             mediaRecorder.start();
-            setVisualState('listening', 'J’écoute...', "Touchez encore l'orbe quand vous avez terminé.");
-        } catch (error) {
-            setVisualState('', 'Micro bloqué', 'Autorisez le microphone puis réessayez.');
-            setTriggerValue('error', String(error));
+            setVisualState('listening', 'J’écoute...', "Touchez encore l'orbe quand terminé.");
+        } catch (err) {
+            setVisualState('', 'Micro bloqué', 'Autorisez le micro.');
+            setTriggerValue('error', String(err));
         }
     };
 
     const stopRecording = async () => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
+        if (mediaRecorder?.state === 'recording') {
             mediaRecorder.stop();
         }
     };
 
-    orb.onclick = async () => {
-        if (isBusy) {
-            return;
+    // =========================
+    // 🧠 HANDLE RESPONSE FROM PYTHON
+    // =========================
+    if (data.response && data.response.nonce !== lastHandledResponseNonce) {
+        lastHandledResponseNonce = data.response.nonce;
+        component.__lastHandledResponseNonce = lastHandledResponseNonce;
+
+        const payload = data.response;
+
+        // Pause previous audio if any (safe here — this is intentional)
+        if (currentAudio) {
+            currentAudio.onended = null;
+            currentAudio.onerror = null;
+            currentAudio.pause();
         }
 
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
+        if (!payload.response_audio_base64) {
+            isBusy = false;
+            component.__isBusy = false;
+            currentAudio = null;
+            component.__currentAudio = null;
+            setVisualState('', 'Réponse prête', 'Sans audio.');
+        } else {
+            currentAudio = new Audio(
+                `data:${payload.response_audio_mime_type || 'audio/mpeg'};base64,${payload.response_audio_base64}`
+            );
+            component.__currentAudio = currentAudio;
+            setVisualState('speaking', 'Réponse vocale', 'Le robot parle...');
+
+            const playPromise = currentAudio.play();
+
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        // Playing successfully — attach end/error handlers now
+                        currentAudio.onended = () => {
+                            isBusy = false;
+                            component.__isBusy = false;
+                            resetVisualState();
+                            setTriggerValue('playback_finished', payload.nonce);
+                        };
+                        currentAudio.onerror = () => {
+                            isBusy = false;
+                            component.__isBusy = false;
+                            setVisualState('', 'Erreur audio', 'Lecture échouée.');
+                            setTriggerValue('error', 'Audio playback failed');
+                        };
+                    })
+                    .catch((err) => {
+                        if (err.name === 'AbortError') return; // Intentional teardown, ignore
+                        console.error('AUDIO_PLAY_FAILED', err.name, err.message);
+                        isBusy = false;
+                        component.__isBusy = false;
+                        setVisualState('', `Erreur: ${err.name}`, err.message || 'Lecture échouée.');
+                        setTriggerValue('error', `${err.name}: ${err.message}`);
+                    });
+            }
+        }
+    }
+
+
+    // =========================
+    // CLICK
+    // =========================
+    orb.onclick = async () => {
+        if (isBusy) return;
+
+        if (mediaRecorder?.state === 'recording') {
             await stopRecording();
         } else {
             await startRecording();
         }
     };
 
+    // =========================
+    // RESET
+    // =========================
     if (data.reset_token && data.reset_token !== component.__resetToken) {
         component.__resetToken = data.reset_token;
+
         if (currentAudio) {
             currentAudio.pause();
             currentAudio = null;
             component.__currentAudio = null;
         }
+
         isBusy = false;
         component.__isBusy = false;
+
         resetVisualState();
     }
 
-    if (!isBusy && !(mediaRecorder && mediaRecorder.state === 'recording')) {
+    if (!isBusy && !(mediaRecorder?.state === 'recording')) {
         resetVisualState();
     }
 
+    
+    // =========================
+    // TEARDOWN — mic tracks only, never touch audio
+    // =========================
     return () => {
-        if (currentAudio) {
-            currentAudio.pause();
-        }
-        stopTracks();
+        stopTracks(); // Clean up mic — this is fine on re-render
+        // ✅ Do NOT pause currentAudio here — it must survive re-renders
     };
 }
 """
