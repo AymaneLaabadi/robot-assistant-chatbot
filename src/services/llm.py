@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from src.services.navigation import NavigationService
 from src.services.rag import RAGService
+import os
 
 load_dotenv(override=True)
 
@@ -33,7 +34,6 @@ class LLMService:
     def __init__(self, rag_service: RAGService, navigation_service: Optional[NavigationService] = None):
         self.rag = rag_service
         self.navigation_service = navigation_service or NavigationService()
-
         self.llm = ChatGroq(
             model="openai/gpt-oss-120b",
             temperature=0.3,
@@ -156,7 +156,6 @@ class LLMService:
             }
         )
         messages.append({"role": "user", "content": query})
-
         invoke_payload = {"messages": messages}
         if tool_inputs:
             invoke_payload["tool_inputs"] = tool_inputs

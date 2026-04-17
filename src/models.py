@@ -33,7 +33,7 @@ class Destination:
 
 @dataclass
 class State:
-    audio_input: Optional[bytes | str] = None
+    audio_input: Optional[bytes] = None
     user_query: Optional[str] = None
     transcription: Optional[str] = None
     retrieved_docs: Optional[List[str]] = None

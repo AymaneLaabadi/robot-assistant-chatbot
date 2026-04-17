@@ -153,7 +153,7 @@ class AudioWorkflow(BaseWorkflow):
         state.response_audio_format = audio_format
         return state
 
-    def run(self, audio: bytes | str, conversation_id: str | None = None) -> State:
+    def run(self, audio: bytes, conversation_id: str | None = None) -> State:
         self._ensure_conversation(conversation_id)
         initial_state = State(audio_input=audio, conversation_id=conversation_id)
         return self.workflow.invoke(initial_state)
@@ -176,10 +176,10 @@ class Workflow:
     def run_text(self, text: str, conversation_id: str | None = None):
         return self.chat_workflow.run_text(text=text, conversation_id=conversation_id)
 
-    def run_audio(self, audio: bytes | str, conversation_id: str | None = None) -> State:
+    def run_audio(self, audio: bytes, conversation_id: str | None = None) -> State:
         return self.audio_workflow.run(audio=audio, conversation_id=conversation_id)
 
-    def run(self, audio: bytes | str, conversation_id: str | None = None) -> str:
+    def run(self, audio: bytes, conversation_id: str | None = None) -> str:
         final_state = self.run_audio(audio=audio, conversation_id=conversation_id)
         response = self.audio_workflow._state_value(final_state, "response")
         return response or ""
