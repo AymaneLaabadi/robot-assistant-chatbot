@@ -50,12 +50,12 @@ class TTSService:
     # ======================================================
     # VOICE SELECTION (your logic preserved)
     # ======================================================
-    def _get_voice_iedge/en-US-AriaRUS"
+    def _get_voice_id(self, language: str) -> str:
+        if language == "en":
+            return "a167e0f3-df7e-4d52-a9c3-f949145efdab"
         elif language == "fr":
-            return "edge/fr-FR-DeniseNeural"
+            return "7c58f4a4-a72c-42fa-a503-41b9408820f3"
         elif language == "ar":
-            return "edge/ar-SA-ZariyahRUS"
-        return "edge/en-US-AriaRUS
             return "664aec8a-64a4-4437-8a0b-a61aa4f51fe6"
         return "a167e0f3-df7e-4d52-a9c3-f949145efdab"  # Default to English voice
 
