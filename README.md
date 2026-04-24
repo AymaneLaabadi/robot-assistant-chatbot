@@ -12,8 +12,7 @@ A Streamlit-based campus robot assistant UI for robotics project. This project c
 
 ## Repository structure
 
-- `main.py` - CLI entrypoint showing how to launch the app
-- `streamlit_app.py` - Streamlit application bootstrap
+- `app/streamlit_app.py` - Streamlit application bootstrap
 - `pyproject.toml` - Python dependency configuration
 - `src/ui/app.py` - Streamlit UI structure and navigation workflow
 - `src/workflow.py` - text/audio workflow orchestration
