@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import websocket
+
 from src.models import Destination
 from src.services.location_catalog import LocationCatalogService
 
@@ -19,7 +21,8 @@ class NavigationService:
         self.catalog = LocationCatalogService(locations_file=locations_file)
         self.history_file = Path(history_file)
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
-        self.robot_navigation_api_url = os.getenv("ROBOT_NAVIGATION_API_URL", "").strip()
+        self.rosbridge_url = os.getenv("ROSBRIDGE_URL", "ws://localhost:9090").strip()
+        self.navigation_topic = os.getenv("ROS_NAVIGATION_TOPIC", "/navigation_goal").strip()
 
     def list_locations(self):
         return self.catalog.list_locations()
@@ -116,23 +119,27 @@ class NavigationService:
             "floor": navigation_payload["floor"],
         }
 
-        # Placeholder until the robot ROS API endpoint is available in this app environment.
-        # Example integration:
-        # import urllib.request
-        #
-        # request = urllib.request.Request(
-        #     url=f"{self.robot_navigation_api_url.rstrip('/')}/navigation/start",
-        #     data=json.dumps(command_payload).encode("utf-8"),
-        #     headers={"Content-Type": "application/json"},
-        #     method="POST",
-        # )
-        # with urllib.request.urlopen(request, timeout=10) as response:
-        #     return json.loads(response.read().decode("utf-8"))
-        #
-        # The ROS-side API would then translate this payload into the actual navigation goal.
-        return {
-            "status": "placeholder",
-            "message": "Navigation command prepared. Connect ROBOT_NAVIGATION_API_URL to send it to ROS.",
-            "api_url": self.robot_navigation_api_url or None,
-            "command_payload": command_payload,
-        }
+        # Send the command to ROS2 via rosbridge using a WebSocket connection
+        try:
+            ws = websocket.create_connection(self.rosbridge_url)
+            msg = {
+                "op": "publish",
+                "topic": self.navigation_topic,
+                "type": "std_msgs/String",
+                "msg": {"data": json.dumps(command_payload)}
+            }
+            ws.send(json.dumps(msg))
+            ws.close()
+            return {
+                "status": "sent",
+                "message": "Navigation command sent to ROS2 via rosbridge.",
+                "topic": self.navigation_topic,
+                "payload": command_payload,
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"Failed to send navigation command: {str(e)}",
+                "rosbridge_url": self.rosbridge_url,
+                "topic": self.navigation_topic,
+            }
