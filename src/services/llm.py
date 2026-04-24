@@ -35,7 +35,7 @@ class LLMService:
         self.rag = rag_service
         self.navigation_service = navigation_service or NavigationService()
         self.llm = ChatOpenAI(
-            model="gpt-4",
+            model="gpt-4o-mini",
             temperature=0.3,
             max_retries=2,
         )

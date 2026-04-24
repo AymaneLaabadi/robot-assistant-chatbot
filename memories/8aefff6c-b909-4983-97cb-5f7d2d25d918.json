@@ -1,0 +1,42 @@
+[
+  {
+    "role": "user",
+    "text": "Hello there.",
+    "ts": "2026-04-24T21:10:51.802737"
+  },
+  {
+    "role": "assistant",
+    "text": "Hello! How can I assist you today?",
+    "ts": "2026-04-24T21:10:51.812919"
+  },
+  {
+    "role": "user",
+    "text": "Could not transcribe audio.",
+    "ts": "2026-04-24T21:16:06.413975"
+  },
+  {
+    "role": "assistant",
+    "text": "I'm sorry, but I didn't catch that. Could you please repeat your question or request?",
+    "ts": "2026-04-24T21:16:06.421766"
+  },
+  {
+    "role": "user",
+    "text": "Hello.",
+    "ts": "2026-04-24T21:16:42.953546"
+  },
+  {
+    "role": "assistant",
+    "text": "Hello! How can I assist you today?",
+    "ts": "2026-04-24T21:16:42.961949"
+  },
+  {
+    "role": "user",
+    "text": "Hi there, can you help me?",
+    "ts": "2026-04-24T21:41:52.227389"
+  },
+  {
+    "role": "assistant",
+    "text": "Hi! Of course, how can I help you?",
+    "ts": "2026-04-24T21:41:52.235113"
+  }
+]
