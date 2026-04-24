@@ -6212,6 +6212,7 @@ dependencies = [
     { name = "requests" },
     { name = "sentence-transformers" },
     { name = "streamlit" },
+    { name = "websocket-client" },
 ]
 
 [package.metadata]
@@ -6239,6 +6240,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "sentence-transformers", specifier = ">=2.2.2" },
     { name = "streamlit", specifier = ">=1.44.0" },
+    { name = "websocket-client", specifier = ">=1.8.0" },
 ]
 
 [[package]]
