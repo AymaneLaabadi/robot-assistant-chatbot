@@ -28,4 +28,5 @@ dependencies = [
     "edge-tts>=7.2.8",
     "cartesia>=3.0.2",
     "pymupdf>=1.27.2.2",
+    "websocket-client>=1.8.0",
 ]
