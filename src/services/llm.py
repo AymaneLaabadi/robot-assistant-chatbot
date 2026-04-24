@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_core.messages import BaseMessage
-from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 from src.services.navigation import NavigationService
@@ -34,8 +34,8 @@ class LLMService:
     def __init__(self, rag_service: RAGService, navigation_service: Optional[NavigationService] = None):
         self.rag = rag_service
         self.navigation_service = navigation_service or NavigationService()
-        self.llm = ChatGroq(
-            model="openai/gpt-oss-120b",
+        self.llm = ChatOpenAI(
+            model="gpt-4",
             temperature=0.3,
             max_retries=2,
         )

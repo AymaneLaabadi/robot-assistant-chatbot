@@ -1,9 +1,13 @@
+LICENSE
 README.md
 pyproject.toml
 src/__init__.py
 src/models.py
 src/scrapping.py
 src/workflow.py
+src/components/__init__.py
+src/components/voice_assistant.py
+src/components/voice_bridge.py
 src/robot_assistant_chatbot.egg-info/PKG-INFO
 src/robot_assistant_chatbot.egg-info/SOURCES.txt
 src/robot_assistant_chatbot.egg-info/dependency_links.txt
@@ -11,6 +15,12 @@ src/robot_assistant_chatbot.egg-info/requires.txt
 src/robot_assistant_chatbot.egg-info/top_level.txt
 src/services/__init__.py
 src/services/llm.py
+src/services/location_catalog.py
 src/services/memory.py
+src/services/navigation.py
 src/services/rag.py
 src/services/stt.py
+src/services/tts.py
+src/ui/__init__.py
+src/ui/app.py
+src/ui/styles.py
