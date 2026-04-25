@@ -28,6 +28,7 @@ DEFAULT_CATEGORY_BY_NAME = {
     "bureau e-olive": "clubs",
     "bureau e-mix": "clubs",
     "service d'impression": "services",
+    "toilettes": "sanitaires",
 }
 
 
