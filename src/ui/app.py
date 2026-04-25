@@ -481,11 +481,7 @@ def render_voice_widget(assistant: Workflow) -> None:
             },
         )
 
-        # 🔍 DEBUG: Show what's being passed to component
-        vr = st.session_state.get("voice_response")
-        if vr:
-            st.caption(f"📋 Response ready: {vr.get('response', '')[:50]}... | Audio: {'✅' if vr.get('response_audio_base64') else '❌'} ({len(vr.get('response_audio_base64', ''))} chars)")
-        
+
         voice_input = state_value(component_result, "voice_input")
 
         if isinstance(voice_input, dict):
