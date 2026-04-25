@@ -29,6 +29,7 @@ CATEGORY_PALETTE = {
     "clubs": ("#ede9fe", "#6d28d9"),
     "services": ("#cffafe", "#0f766e"),
     "autre": ("#e2e8f0", "#334155"),
+    "sanitaires": ("#fef9c3", "#a16207"),
 }
 
 
@@ -175,10 +176,12 @@ def normalize_category_key(category: str) -> str:
         return "services"
     if "sant" in value or "health" in value or "med" in value:
         return "sante"
-    if "dia" in value or "media" in value:
+    if "med" in value or "media" in value:
         return "media"
-    if "tent" in value or "lounge" in value or "relax" in value:
+    if "fun" in value or "lounge" in value or "relax" in value:
         return "detente"
+    if "sanit" in value or "toilet" in value or "restroom" in value:
+        return "sanitaires"
     return "autre"
 
 

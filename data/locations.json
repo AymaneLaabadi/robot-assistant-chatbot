@@ -13,6 +13,19 @@
     }
   },
   {
+    "location_name": "Toilettes",
+    "category": "Sanitaires",
+    "aliases": ["wc", "toilettes", "bathroom", "restroom", "lavatory", "toilet", "sanitary facilities", "sanitaires"],
+    "description": "Toilettes pour les visiteurs et les étudiants.",
+    "building": "Bâtiment Emines",
+    "floor": "RDC",
+    "accessible": true,
+    "coordinates": {
+      "latitude": 40.7128,
+      "longitude": -74.006
+    }
+  },
+  {
     "location_name": "Accueil",
     "category": "Administratif",
     "aliases": [
