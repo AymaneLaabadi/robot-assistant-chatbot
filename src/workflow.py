@@ -9,6 +9,15 @@ from .services.rag import RAGService
 from .services.stt import SpeechToTextService
 from .services.tts import TTSService
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import os
+
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
+os.environ["LANGCHAIN_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT")
+os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT")
 
 class WorkflowServices:
     def __init__(self, memory_base: str = "./memories"):
@@ -107,7 +116,13 @@ class ChatWorkflow(BaseWorkflow):
     def run(self, text: str, conversation_id: str | None = None) -> State:
         self._ensure_conversation(conversation_id)
         initial_state = State(user_query=text, conversation_id=conversation_id)
-        return self.workflow.invoke(initial_state)
+        return self.workflow.invoke(
+            initial_state, 
+            config = {"configurable": {"thread_id": conversation_id or "default"},
+                      "tags": ["chat"],
+                      "metadata": {"mode": "text"}
+                    }
+            )
 
     def run_text(self, text: str, conversation_id: str | None = None):
         final_state = self.run(text=text, conversation_id=conversation_id)
@@ -156,7 +171,14 @@ class AudioWorkflow(BaseWorkflow):
     def run(self, audio: bytes, conversation_id: str | None = None) -> State:
         self._ensure_conversation(conversation_id)
         initial_state = State(audio_input=audio, conversation_id=conversation_id)
-        return self.workflow.invoke(initial_state)
+        return self.workflow.invoke(
+            initial_state,
+            config={
+                "configurable": {"thread_id": conversation_id or "default"},
+                "tags": ["audio"],
+                "metadata": {"mode": "voice"}
+            }
+    )
 
 
 class Workflow:
