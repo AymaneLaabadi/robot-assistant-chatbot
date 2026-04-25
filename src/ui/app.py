@@ -481,6 +481,11 @@ def render_voice_widget(assistant: Workflow) -> None:
             },
         )
 
+        # 🔍 DEBUG: Show what's being passed to component
+        vr = st.session_state.get("voice_response")
+        if vr:
+            st.caption(f"📋 Response ready: {vr.get('response', '')[:50]}... | Audio: {'✅' if vr.get('response_audio_base64') else '❌'} ({len(vr.get('response_audio_base64', ''))} chars)")
+        
         voice_input = state_value(component_result, "voice_input")
 
         if isinstance(voice_input, dict):
@@ -488,10 +493,11 @@ def render_voice_widget(assistant: Workflow) -> None:
 
             if nonce != st.session_state.last_voice_event_nonce:
                 st.session_state.last_voice_event_nonce = nonce
+                print(f"[APP_DEBUG] Processing voice input with nonce: {nonce}")
 
                 request_payload = {
                     "audio_base64": str(voice_input.get("audio_base64", "")),
-                    "mime_type": str(voice_input.get("mime_type", "audio/webm")),
+                    "mime_type": str(voice_input.get("mime_type", "audio/wav")),
                     "conversation_id": (
                         voice_input.get("conversation_id")
                         or st.session_state.audio_conversation_id
@@ -499,6 +505,10 @@ def render_voice_widget(assistant: Workflow) -> None:
                 }
 
                 response = handle_voice_request(request_payload)
+
+                print(f"[APP_DEBUG] handle_voice_request returned: {type(response)}, keys: {list(response.keys()) if isinstance(response, dict) else 'N/A'}")
+                print(f"[APP_DEBUG] response_audio_base64 length: {len(response.get('response_audio_base64', ''))}")
+
                 if not isinstance(response, dict):
                     response = {"error": "Réponse vocale invalide du serveur."}
 
@@ -506,6 +516,8 @@ def render_voice_widget(assistant: Workflow) -> None:
                     "nonce": nonce,
                     **response,
                 }
+
+                print(f"[APP_DEBUG] voice_response set, total size: {len(str(st.session_state.voice_response))} chars")
 
                 if "error" in response:
                     st.session_state.last_voice_error = response["error"]

@@ -13,39 +13,49 @@ class TTSService:
     def synthesize(self, text: str):
         text = " ".join(text.split())
         if not text:
+            print("[TTS] Empty text provided")
             return None, "audio/wav"
 
         language = self._detect_language(text)
         voice_id = self._get_voice_id(language)
+        print(f"[TTS] Language detected: {language}, Voice ID: {voice_id}")
 
-        response = self.client.tts.generate(
-            model_id="sonic-3",
-            transcript=text,
-            voice={
-                "mode": "id",
-                "id": voice_id
-            },
-            output_format={
-                "container": "wav",
-                "encoding": "pcm_f32le",
-                "sample_rate": 44100
-            },
-        )
+        try:
+            response = self.client.tts.generate(
+                model_id="sonic-3",
+                transcript=text,
+                voice={
+                    "mode": "id",
+                    "id": voice_id
+                },
+                output_format={
+                    "container": "wav",
+                    "encoding": "pcm_s16le",
+                    "sample_rate": 44100
+                },
+            )
 
-        # Create safe temp file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-            temp_path = Path(tmp.name)
+            # Create safe temp file
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                temp_path = Path(tmp.name)
 
-        # write audio to temp file
-        response.write_to_file(str(temp_path))
+            # write audio to temp file
+            print(f"[TTS] Writing audio to {temp_path}")
+            response.write_to_file(str(temp_path))
 
-        # read back bytes
-        audio_bytes = temp_path.read_bytes()
+            # read back bytes
+            audio_bytes = temp_path.read_bytes()
+            print(f"[TTS] Read {len(audio_bytes)} bytes from file")
 
-        # cleanup
-        temp_path.unlink(missing_ok=True)
+            # cleanup
+            temp_path.unlink(missing_ok=True)
 
-        return audio_bytes, "audio/wav"
+            return audio_bytes, "audio/wav"
+        except Exception as e:
+            print(f"[TTS SERVICE ERROR] {type(e).__name__}: {e}")
+            import traceback
+            print(traceback.format_exc())
+            return None, "audio/wav"
 
     # ======================================================
     # VOICE SELECTION (your logic preserved)

@@ -163,9 +163,32 @@ class AudioWorkflow(BaseWorkflow):
         return state
 
     def _tts_step(self, state: State) -> State:
-        audio_bytes, audio_format = self.tts_service.synthesize(state.response or "")
-        state.response_audio = audio_bytes
-        state.response_audio_format = audio_format
+        print("[TTS] Input text:", state.response)
+
+        try:
+            if not state.response or not state.response.strip():
+                print("[TTS ERROR] Empty response text, skipping TTS")
+                state.response_audio = None
+                return state
+                
+            audio_bytes, audio_format = self.tts_service.synthesize(state.response or "")
+            print("[TTS] Audio generated:", len(audio_bytes) if audio_bytes else 0, "bytes")
+
+            if not audio_bytes:
+                print("[TTS ERROR] TTS returned None audio bytes")
+                state.response_audio = None
+                return state
+
+            state.response_audio = audio_bytes
+            state.response_audio_format = audio_format
+            print(f"[TTS] Audio format: {audio_format}")
+
+        except Exception as e:
+            print("[TTS ERROR]:", str(e))
+            import traceback
+            print(traceback.format_exc())
+            state.response_audio = None
+
         return state
 
     def run(self, audio: bytes, conversation_id: str | None = None) -> State:
@@ -178,7 +201,7 @@ class AudioWorkflow(BaseWorkflow):
                 "tags": ["audio"],
                 "metadata": {"mode": "voice"}
             }
-    )
+        )
 
 
 class Workflow:

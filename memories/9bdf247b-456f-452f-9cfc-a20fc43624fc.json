@@ -1,0 +1,12 @@
+[
+  {
+    "role": "user",
+    "text": "Hello, help.",
+    "ts": "2026-04-25T03:26:28.081791"
+  },
+  {
+    "role": "assistant",
+    "text": "Bonjour ! Comment puis-je vous aider aujourd'hui ?",
+    "ts": "2026-04-25T03:26:28.113857"
+  }
+]

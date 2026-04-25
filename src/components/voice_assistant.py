@@ -97,252 +97,292 @@ VOICE_ASSISTANT_CSS = """
 """
 
 
-VOICE_ASSISTANT_JS = """
+VOICE_ASSISTANT_JS = r"""
 export default function(component) {
-    const { parentElement, data, setTriggerValue } = component;
-    const orb = parentElement.querySelector('.voice-orb');
-    const status = parentElement.querySelector('.voice-status');
-    const hint = parentElement.querySelector('.voice-hint');
+    // =============================================
+    // FIND THE ACTUAL DOM ELEMENT
+    // =============================================
+    let root = component.element || component.parentElement;
 
-    if (!orb || !status || !hint) return;
+    // Fallback: query from document if component.element is not a DOM node
+    if (!root || typeof root.querySelector !== "function") {
+        root = document.querySelector(".voice-assistant-root");
+    }
 
-    let mediaRecorder = component.__mediaRecorder || null;
-    let mediaStream = component.__mediaStream || null;
-    let chunks = component.__chunks || [];
-    let currentAudio = component.__currentAudio || null;
-    let isBusy = component.__isBusy || false;
-    let lastRequestNonce = component.__lastRequestNonce || null;
-    let lastHandledResponseNonce = component.__lastHandledResponseNonce || null;
+    if (!root) {
+        console.error("[VOICE_ORB] Could not find root DOM element");
+        return;
+    }
 
+    const orb = root.querySelector(".voice-orb");
+    const status = root.querySelector(".voice-status");
+    const hint = root.querySelector(".voice-hint");
 
-    // =========================
+    if (!orb || !status || !hint) {
+        console.error("[VOICE_ORB] Could not find orb/status/hint elements");
+        return;
+    }
+
+    // =============================================
+    // PERSIST STATE IN WINDOW (survives everything)
+    // =============================================
+    const STATE_KEY = "__voice_orb_state__";
+    if (!window[STATE_KEY]) {
+        window[STATE_KEY] = {};
+    }
+    const state = window[STATE_KEY];
+
+    let isBusy = state.isBusy || false;
+    let lastHandledNonce = state.lastHandledNonce || null;
+
+    const setIsBusy = function(val) { isBusy = val; state.isBusy = val; };
+    const setLastHandledNonce = function(val) { lastHandledNonce = val; state.lastHandledNonce = val; };
+
+    // MediaRecorder (transient, ok to lose on rerun)
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let chunks = [];
+
+    // Audio element - persist in window
+    const AUDIO_KEY = "__voice_orb_audio__";
+    let currentAudio = window[AUDIO_KEY] || null;
+    const saveAudioRef = function(audio) {
+        currentAudio = audio;
+        window[AUDIO_KEY] = audio;
+    };
+
+    // =============================================
     // UI STATE
-    // =========================
-    const resetVisualState = () => {
-        orb.classList.remove('listening', 'processing', 'speaking');
-        status.textContent = 'Prêt';
+    // =============================================
+    const resetVisualState = function() {
+        orb.classList.remove("listening", "processing", "speaking");
+        status.textContent = "Prêt";
         hint.textContent = "Touchez l'orbe pour parler, puis touchez à nouveau pour envoyer.";
     };
 
-    const setVisualState = (mode, label, hintText) => {
-        orb.classList.remove('listening', 'processing', 'speaking');
+    const setVisualState = function(mode, label, hintText) {
+        orb.classList.remove("listening", "processing", "speaking");
         if (mode) orb.classList.add(mode);
         status.textContent = label;
         hint.textContent = hintText;
     };
 
-    // =========================
+    // =============================================
     // UTILS
-    // =========================
-    const blobToBase64 = (blob) =>
-        new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = String(reader.result || '');
-                resolve(result.includes(',') ? result.split(',')[1] : '');
+    // =============================================
+    const blobToBase64 = function(blob) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onloadend = function() {
+                var result = String(reader.result || "");
+                resolve(result.indexOf(",") !== -1 ? result.split(",")[1] : "");
             };
-            reader.onerror = () => reject(reader.error);
+            reader.onerror = function() { reject(reader.error); };
             reader.readAsDataURL(blob);
         });
+    };
 
-    const stopTracks = () => {
+    const stopTracks = function() {
         if (mediaStream) {
-            mediaStream.getTracks().forEach((t) => t.stop());
+            mediaStream.getTracks().forEach(function(t) { t.stop(); });
             mediaStream = null;
-            component.__mediaStream = null;
         }
     };
 
-    // =========================
-    // 🔥 SEND TO STREAMLIT (NO FETCH)
-    // =========================
-    const sendRecording = async (blob, mimeType) => {
-        const audioBase64 = await blobToBase64(blob);
-        const nonce = Date.now();
+    // =============================================
+    // SEND TO STREAMLIT
+    // =============================================
+    const sendRecording = async function(blob, mimeType) {
+        var audioBase64 = await blobToBase64(blob);
+        var nonce = Date.now();
 
-        lastRequestNonce = nonce;
-        component.__lastRequestNonce = nonce;
+        setIsBusy(true);
+        setVisualState("processing", "Traitement...", "Le robot prépare sa réponse.");
 
-        isBusy = true;
-        component.__isBusy = true;
-
-        setVisualState('processing', 'Traitement...', 'Le robot prépare sa réponse.');
-
-        setTriggerValue('voice_input', {
-            nonce,
+        component.setTriggerValue("voice_input", {
+            nonce: nonce,
             audio_base64: audioBase64,
             mime_type: mimeType,
-            conversation_id: data.conversation_id,
+            conversation_id: data.conversation_id
         });
     };
 
-    // =========================
-    // 🎤 RECORDING
-    // =========================
-    const startRecording = async () => {
+    // =============================================
+    // RECORDING
+    // =============================================
+    const startRecording = async function() {
         try {
-            if (!navigator.mediaDevices?.getUserMedia) {
-                throw new Error('Microphone not supported.');
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Microphone not supported.");
             }
 
             mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            component.__mediaStream = mediaStream;
 
-            let mimeType = '';
-            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-                mimeType = 'audio/webm;codecs=opus';
-            } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-                mimeType = 'audio/webm';
+            var mimeType = "";
+            if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+                mimeType = "audio/webm;codecs=opus";
+            } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+                mimeType = "audio/webm";
             }
 
             mediaRecorder = mimeType
-                ? new MediaRecorder(mediaStream, { mimeType })
+                ? new MediaRecorder(mediaStream, { mimeType: mimeType })
                 : new MediaRecorder(mediaStream);
 
-            component.__mediaRecorder = mediaRecorder;
-
             chunks = [];
-            component.__chunks = chunks;
 
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data?.size > 0) chunks.push(e.data);
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data && e.data.size > 0) chunks.push(e.data);
             };
 
-            mediaRecorder.onstop = async () => {
+            mediaRecorder.onstop = async function() {
                 try {
-                    const actualMime = mediaRecorder.mimeType || 'audio/webm';
-                    const blob = new Blob(chunks, { type: actualMime });
+                    var actualMime = mediaRecorder.mimeType || "audio/webm";
+                    var blob = new Blob(chunks, { type: actualMime });
                     stopTracks();
                     await sendRecording(blob, actualMime);
                 } catch (err) {
-                    isBusy = false;
-                    component.__isBusy = false;
-                    setVisualState('', 'Erreur capture', 'Veuillez réessayer.');
-                    setTriggerValue('error', String(err));
+                    setIsBusy(false);
+                    setVisualState("", "Erreur capture", "Veuillez réessayer.");
+                    component.setTriggerValue("error", String(err));
                 }
             };
 
             mediaRecorder.start();
-            setVisualState('listening', 'J’écoute...', "Touchez encore l'orbe quand terminé.");
+            setVisualState("listening", "J'écoute...", "Touchez encore l'orbe quand terminé.");
         } catch (err) {
-            setVisualState('', 'Micro bloqué', 'Autorisez le micro.');
-            setTriggerValue('error', String(err));
+            setVisualState("", "Micro bloqué", "Autorisez le micro.");
+            component.setTriggerValue("error", String(err));
         }
     };
 
-    const stopRecording = async () => {
-        if (mediaRecorder?.state === 'recording') {
+    const stopRecording = function() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
             mediaRecorder.stop();
         }
     };
 
-    // =========================
-    // 🧠 HANDLE RESPONSE FROM PYTHON
-    // =========================
-    if (data.response && data.response.nonce !== lastHandledResponseNonce) {
-        lastHandledResponseNonce = data.response.nonce;
-        component.__lastHandledResponseNonce = lastHandledResponseNonce;
+    // =============================================
+    // HANDLE RESPONSE FROM PYTHON
+    // =============================================
+    var data = component.data || {};
 
-        const payload = data.response;
+    if (data.response) {
+        var payload = data.response;
+        var payloadNonce = payload.nonce;
 
-        // Pause previous audio if any (safe here — this is intentional)
-        if (currentAudio) {
-            currentAudio.onended = null;
-            currentAudio.onerror = null;
-            currentAudio.pause();
-        }
+        console.log("[VOICE_ORB] Response received, nonce:", payloadNonce, "last:", lastHandledNonce);
 
-        if (!payload.response_audio_base64) {
-            isBusy = false;
-            component.__isBusy = false;
-            currentAudio = null;
-            component.__currentAudio = null;
-            setVisualState('', 'Réponse prête', 'Sans audio.');
-        } else {
-            currentAudio = new Audio(
-                `data:${payload.response_audio_mime_type || 'audio/mpeg'};base64,${payload.response_audio_base64}`
-            );
-            component.__currentAudio = currentAudio;
-            setVisualState('speaking', 'Réponse vocale', 'Le robot parle...');
+        if (payloadNonce !== lastHandledNonce) {
+            setLastHandledNonce(payloadNonce);
 
-            const playPromise = currentAudio.play();
+            // Stop previous audio
+            if (currentAudio) {
+                currentAudio.onended = null;
+                currentAudio.onerror = null;
+                currentAudio.pause();
+                currentAudio.src = "";
+                saveAudioRef(null);
+            }
 
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        // Playing successfully — attach end/error handlers now
-                        currentAudio.onended = () => {
-                            isBusy = false;
-                            component.__isBusy = false;
+            if (!payload.response_audio_base64) {
+                console.warn("[VOICE_ORB] No audio data");
+                setIsBusy(false);
+                resetVisualState();
+            } else {
+                var mime = payload.response_audio_mime_type || "audio/wav";
+                var dataUri = "data:" + mime + ";base64," + payload.response_audio_base64;
+
+                console.log("[VOICE_ORB] Creating audio element, URI length:", dataUri.length);
+
+                var audio = new Audio(dataUri);
+                audio.preload = "auto";
+
+                saveAudioRef(audio);
+                setVisualState("speaking", "Réponse vocale", "Le robot parle...");
+
+                var playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(function() {
+                        console.log("[VOICE_ORB] Audio playing");
+                        audio.onended = function() {
+                            console.log("[VOICE_ORB] Audio ended");
+                            setIsBusy(false);
                             resetVisualState();
-                            setTriggerValue('playback_finished', payload.nonce);
+                            component.setTriggerValue("playback_finished", payloadNonce);
                         };
-                        currentAudio.onerror = () => {
-                            isBusy = false;
-                            component.__isBusy = false;
-                            setVisualState('', 'Erreur audio', 'Lecture échouée.');
-                            setTriggerValue('error', 'Audio playback failed');
+                        audio.onerror = function(e) {
+                            console.error("[VOICE_ORB] Audio error", e);
+                            setIsBusy(false);
+                            setVisualState("", "Erreur audio", "Lecture échouée.");
+                            component.setTriggerValue("error", "Audio playback error");
                         };
-                    })
-                    .catch((err) => {
-                        if (err.name === 'AbortError') return; // Intentional teardown, ignore
-                        console.error('AUDIO_PLAY_FAILED', err.name, err.message);
-                        isBusy = false;
-                        component.__isBusy = false;
-                        setVisualState('', `Erreur: ${err.name}`, err.message || 'Lecture échouée.');
-                        setTriggerValue('error', `${err.name}: ${err.message}`);
+                    }).catch(function(err) {
+                        if (err.name === "AbortError") return;
+
+                        console.error("[VOICE_ORB] Play failed:", err.name, err.message);
+
+                        if (err.name === "NotAllowedError") {
+                            setIsBusy(false);
+                            setVisualState("", "Audio prêt", "Cliquez pour écouter.");
+                            return;
+                        }
+
+                        setIsBusy(false);
+                        setVisualState("", "Erreur: " + err.name, err.message);
+                        component.setTriggerValue("error", err.name + ": " + err.message);
                     });
+                }
             }
         }
     }
 
-
-    // =========================
-    // CLICK
-    // =========================
-    orb.onclick = async () => {
+    // =============================================
+    // CLICK HANDLER
+    // =============================================
+    orb.onclick = async function() {
         if (isBusy) return;
 
-        if (mediaRecorder?.state === 'recording') {
-            await stopRecording();
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            stopRecording();
         } else {
             await startRecording();
         }
     };
 
-    // =========================
-    // RESET
-    // =========================
-    if (data.reset_token && data.reset_token !== component.__resetToken) {
-        component.__resetToken = data.reset_token;
+    // =============================================
+    // RESET HANDLING
+    // =============================================
+    if (data.reset_token && data.reset_token !== state.resetToken) {
+        state.resetToken = data.reset_token;
 
         if (currentAudio) {
             currentAudio.pause();
-            currentAudio = null;
-            component.__currentAudio = null;
+            currentAudio.src = "";
+            saveAudioRef(null);
         }
 
-        isBusy = false;
-        component.__isBusy = false;
-
+        setIsBusy(false);
+        setLastHandledNonce(null);
         resetVisualState();
     }
 
-    if (!isBusy && !(mediaRecorder?.state === 'recording')) {
-        resetVisualState();
+    // Sync visual state
+    if (!isBusy && !(mediaRecorder && mediaRecorder.state === "recording")) {
+        if (!orb.classList.contains("speaking")) {
+            resetVisualState();
+        }
     }
 
-    
-    // =========================
-    // TEARDOWN — mic tracks only, never touch audio
-    // =========================
-    return () => {
-        stopTracks(); // Clean up mic — this is fine on re-render
-        // ✅ Do NOT pause currentAudio here — it must survive re-renders
+    // =============================================
+    // TEARDOWN
+    // =============================================
+    return function() {
+        stopTracks();
     };
 }
 """
-
 
 @lru_cache(maxsize=1)
 def _get_voice_component():
@@ -356,16 +396,4 @@ def _get_voice_component():
 
 def voice_assistant_orb(*, key: str, data: dict | None = None):
     component = _get_voice_component()
-    return component(
-        key=key,
-        data=data or {},
-        default={
-            "voice_result": None,
-            "playback_finished": None,
-            "error": None,
-        },
-        height="content",
-        on_voice_result_change=lambda: None,
-        on_playback_finished_change=lambda: None,
-        on_error_change=lambda: None,
-    )
+    return component(key=key, data=data or {})

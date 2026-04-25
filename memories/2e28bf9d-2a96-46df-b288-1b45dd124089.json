@@ -1,0 +1,12 @@
+[
+  {
+    "role": "user",
+    "text": "Could not transcribe audio.",
+    "ts": "2026-04-25T02:32:54.615098"
+  },
+  {
+    "role": "assistant",
+    "text": "Je suis désolé, mais je n'ai pas pu comprendre votre demande. Pourriez-vous reformuler ou préciser ce que vous cherchez ?",
+    "ts": "2026-04-25T02:32:54.624142"
+  }
+]
