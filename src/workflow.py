@@ -1,3 +1,13 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
+os.environ["LANGCHAIN_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT")
+os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT")
+
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 
@@ -8,16 +18,6 @@ from .services.navigation import NavigationService
 from .services.rag import RAGService
 from .services.stt import SpeechToTextService
 from .services.tts import TTSService
-
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
-import os
-
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
-os.environ["LANGCHAIN_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT")
-os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT")
 
 class WorkflowServices:
     def __init__(self, memory_base: str = "./memories"):
@@ -178,7 +178,7 @@ class AudioWorkflow(BaseWorkflow):
                 "tags": ["audio"],
                 "metadata": {"mode": "voice"}
             }
-    )
+        )
 
 
 class Workflow:
