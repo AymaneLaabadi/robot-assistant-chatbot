@@ -73,6 +73,7 @@ def init_session_state(assistant: Workflow) -> None:
     st.session_state.setdefault("pending_chat_prompt", None)
     st.session_state.setdefault("chat_processing", False)
     st.session_state.setdefault("voice_reset_token", str(uuid.uuid4()))
+    st.session_state.setdefault("dock_minimized", False)
 
 
 def state_value(result, key: str, default=None):
@@ -124,6 +125,13 @@ def close_chat_panel() -> None:
 
 def close_voice_panel() -> None:
     st.session_state.voice_panel_open = False
+
+def minimize_dock() -> None:
+    st.session_state.dock_minimized = True
+
+
+def restore_dock() -> None:
+    st.session_state.dock_minimized = False
 
 
 def select_destination(location_name: str) -> None:
@@ -559,8 +567,26 @@ def render_assistant_dock() -> None:
     if st.session_state.chat_panel_open or st.session_state.voice_panel_open:
         return
 
+    # ── Minimised state: just the blue pill ──────────────────────────────
+    if st.session_state.dock_minimized:
+        with st.container(key="assistant_dock_mini"):
+            st.button(
+                "💬 Chat with me!",
+                key="restore_dock_button",
+                use_container_width=True,
+                on_click=restore_dock,
+            )
+        return
+
+    # ── Expanded dock ────────────────────────────────────────────────────
     with st.container(key="assistant_dock"):
-        st.markdown('<div class="assist-copy">Besoin d’aide ?</div>', unsafe_allow_html=True)
+        header_cols = st.columns([7.5, 1], gap="small")
+        with header_cols[0]:
+            st.markdown('<div class="assist-copy">Besoin d\u2019aide\u00a0?</div>', unsafe_allow_html=True)
+        with header_cols[1]:
+            with st.container(key="widget_icon_button_dock_close"):
+                st.button("×", key="minimize_dock_button", use_container_width=True, on_click=minimize_dock)
+
         st.markdown(
             '<div class="assist-subcopy">Discutez avec le robot ou lancez une interaction vocale pour trouver votre destination.</div>',
             unsafe_allow_html=True,
@@ -581,7 +607,6 @@ def render_assistant_dock() -> None:
                 use_container_width=True,
                 on_click=open_voice_panel,
             )
-
 
 @st.fragment
 def render_navigation_fragment(assistant: Workflow) -> None:

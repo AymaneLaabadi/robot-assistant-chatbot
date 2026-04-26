@@ -428,6 +428,206 @@ APP_CSS = """
         right: 0.5rem;
     }
 }
+/* ── Minimised dock pill ───────────────────────────────────────────── */
+.st-key-assistant_dock_mini {
+    position: fixed;
+    right: 1.3rem;
+    bottom: 1.1rem;
+    width: fit-content;
+    z-index: 999;
+}
+
+.st-key-assistant_dock_mini button {
+    min-height: 3rem;
+    border-radius: 999px;
+    font-size: 0.96rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff !important;
+    border: none;
+    padding: 0.5rem 1.4rem;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.38);
+    transition: all 0.2s ease-in-out;
+}
+
+.st-key-assistant_dock_mini button:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    box-shadow: 0 8px 26px rgba(37, 99, 235, 0.50);
+    transform: translateY(-2px);
+}
+
+/* ── Dock close button ─────────────────────────────────────────────── */
+.st-key-widget_icon_button_dock_close button {
+    min-height: 2rem !important;
+    width: 2rem !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+    line-height: 1 !important;
+    margin-top: -0.1rem;
+}
+
+.st-key-widget_icon_button_dock_close button:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+    transform: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE LAYOUT  (≤ 768 px)
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* ── Global ─────────────────────────────────────────────────── */
+    .block-container {
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
+        padding-bottom: 5rem;
+    }
+
+    /* ── Hero ───────────────────────────────────────────────────── */
+    .hero-wrap { padding-bottom: 0.5rem; }
+    .hero-title { font-size: 1.6rem; }
+    .hero-subtitle { font-size: 0.85rem; margin-top: 0.35rem; }
+
+    /* ── Panels: tighter padding ────────────────────────────────── */
+    .st-key-search_panel,
+    .st-key-destination_panel,
+    .st-key-status_panel,
+    .st-key-selected_panel {
+        padding: 0.8rem 0.85rem 0.9rem 0.85rem;
+        border-radius: 16px;
+    }
+
+    /* ── Search: stack text input + dropdown vertically ─────────── */
+    .st-key-search_panel [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+    }
+    .st-key-search_panel [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* ── FIX 3: Flip main columns so status/selected appear ABOVE
+         the cards list. The :has() selector targets the specific
+         HorizontalBlock that contains destination_panel. ────────── */
+    [data-testid="stHorizontalBlock"]:has(.st-key-destination_panel) {
+        flex-direction: column !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-destination_panel)
+        > [data-testid="stColumn"]:first-child {  /* destination panel → push below */
+        order: 2;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-destination_panel)
+        > [data-testid="stColumn"]:last-child {   /* status + selected → pull above */
+        order: 1;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* ── Status panel: compact strip, no decorative title ──────── */
+    .st-key-status_panel { padding: 0.55rem 0.85rem !important; }
+    .st-key-status_panel .section-title,
+    .st-key-status_panel .section-subtitle { display: none; }
+    .status-grid {
+        grid-template-columns: auto 1fr;
+        gap: 0.35rem 0.6rem;
+        font-size: 0.84rem;
+    }
+
+    /* ── Selected panel: tighter ────────────────────────────────── */
+    .st-key-selected_panel .section-subtitle { display: none; }
+    .selected-description { font-size: 0.88rem; }
+    .selected-details { gap: 0.5rem; padding-bottom: 0.75rem; }
+
+    /* ── FIX 2: Cards — one per row, no description ─────────────── */
+    .st-key-destination_panel [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+    }
+    .st-key-destination_panel [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+    }
+    [class*="st-key-destination_card_"] {
+        padding: 0.6rem 0.8rem 0.65rem 0.8rem;
+        border-radius: 14px;
+    }
+    .destination-description { display: none; }  /* reclaim vertical space */
+    .destination-meta { margin-bottom: 0.5rem; }
+
+    /* Cap the scrollable card list height so it doesn't swallow the page.
+       !important is needed because Streamlit sets height via inline style. */
+    .st-key-destination_panel [data-testid="stVerticalBlockBorderWrapper"] {
+        height: auto !important;
+        max-height: 52vh !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+    }
+    .st-key-destination_panel
+        [data-testid="stVerticalBlockBorderWrapper"] > div {
+        height: auto !important;
+    }
+
+    /* ── FIX 1: Widget headers — force title + buttons on one row ─ */
+    /* Root cause: Streamlit collapses narrow columns to block rows.
+       Forcing nowrap + row keeps the icons inline with the title.  */
+    .st-key-chat_widget_panel  [data-testid="stHorizontalBlock"]:first-of-type,
+    .st-key-voice_widget_panel [data-testid="stHorizontalBlock"]:first-of-type,
+    .st-key-assistant_dock     [data-testid="stHorizontalBlock"]:first-of-type {
+        flex-wrap: nowrap !important;
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+    /* Title column expands; icon buttons stay fixed at icon size */
+    .st-key-chat_widget_panel  [data-testid="stHorizontalBlock"]:first-of-type
+        [data-testid="stColumn"]:first-child,
+    .st-key-voice_widget_panel [data-testid="stHorizontalBlock"]:first-of-type
+        [data-testid="stColumn"]:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+    .st-key-chat_widget_panel  [data-testid="stHorizontalBlock"]:first-of-type
+        [data-testid="stColumn"]:not(:first-child),
+    .st-key-voice_widget_panel [data-testid="stHorizontalBlock"]:first-of-type
+        [data-testid="stColumn"]:not(:first-child) {
+        flex: 0 0 2.6rem !important;
+        min-width: 0 !important;
+    }
+
+    /* ── Chat/voice panels: full-width bottom sheet ─────────────── */
+    .st-key-floating_chat_panel,
+    .st-key-floating_voice_panel {
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        border-radius: 20px 20px 0 0 !important;
+        padding: 0.75rem 0.8rem 1rem 0.8rem !important;
+    }
+
+    /* ── Dock: full-width on mobile ─────────────────────────────── */
+    .st-key-assistant_dock {
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        width: auto !important;
+    }
+
+    /* ── Mini pill: stay anchored bottom-right ──────────────────── */
+    .st-key-assistant_dock_mini {
+        right: 0.75rem !important;
+        bottom: 0.85rem !important;
+    }
+}
 </style>
 """
 

@@ -1,8 +1,6 @@
 # Robot Assistant Chatbot
 
 A Streamlit-based campus robot assistant UI for robotics project. This project combines conversational AI, voice interaction, document retrieval, and navigation support into a single local UI.
-In the first slam folder there is the robot's navigation ROS2 system that is ran locally on a mini pc on the robot, and it's connected to internet (not same university's wifi, with a carte reseau externe and cellular data). the other folder robot-assistant-chatbot has the UI (streamlit, langgraph, llm chat and audio services) that we want to give the ability to communicate with the ROS. The UI app is deployed on railway on the address https://robot-assistant-chatbot-production.up.railway.app/ how can I make them communicate. In the service navigation.py there is a _dispatch_navigation_command function that should send the commands to the ROS        self.rosbridge_url = os.getenv("ROSBRIDGE_URL", "ws://localhost:9090").strip()
-        self.navigation_topic = os.getenv("ROS_NAVIGATION_TOPIC", "/navigation_goal").strip()
 
 ## What this project does
 
