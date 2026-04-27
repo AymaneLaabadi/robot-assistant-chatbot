@@ -1,7 +1,8 @@
-from src.ui.app import run_app
+import streamlit as st
+from src.ui.app_desktop import run_app 
 
 
-def main() -> None:
+def main():
     run_app()
 
 

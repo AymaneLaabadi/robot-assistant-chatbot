@@ -336,5 +336,22 @@
                 "floor": "RDC"
             }
         }
+    },
+    {
+        "location": "Service d'Impression",
+        "matched_name": "Service d'Impression",
+        "category": "Services",
+        "date": "2026-04-26T23:19:02.115783+00:00",
+        "requested_by": "mobile_ui",
+        "coordinates": {
+            "latitude": 40.7133,
+            "longitude": -74.0065
+        },
+        "dispatch": {
+            "status": "error",
+            "message": "Failed to send navigation command: [WinError 10061] No connection could be made because the target machine actively refused it",
+            "rosbridge_url": "ws://localhost:9090",
+            "topic": "/navigation_goal"
+        }
     }
 ]
