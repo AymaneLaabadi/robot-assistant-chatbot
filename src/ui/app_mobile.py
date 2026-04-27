@@ -36,19 +36,19 @@ def normalize_category_key(category: str) -> str:
 
 def get_category_emoji(category: str) -> str:
     key = normalize_category_key(category)
-    icons = {
-        "administratif": "🎒",
-        "sante": "🏥",
-        "laboratoire": "🔬",
-        "alimentation": "🍽️",
-        "media": "📽️",
-        "detente": "🎮",
-        "clubs": "👥",
-        "services": "🔧",
-        "sanitaires": "🚻",
-        "autre": "📍",
-    }
-    return icons.get(key, "📍")
+    icon = {
+        "administratif": "&#128188;",
+        "sante": "&#127973;",
+        "laboratoire": "&#129514;",
+        "alimentation": "&#127860;",
+        "media": "&#127897;",
+        "detente": "&#127918;",
+        "clubs": "&#128101;",
+        "services": "&#128295;",
+        "autre": "&#128205;",
+    }.get(key, "&#128205;")
+    return f'<span class="destination-name-icon" aria-hidden="true">{icon}</span>'
+
 
 
 def init_state(assistant) -> None:
