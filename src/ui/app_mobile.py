@@ -86,7 +86,7 @@ def render_navbar() -> None:
                     st.rerun()
         with cols[1]:
             with st.container(key="tab_assist"):
-                if st.button("🤖 Assistant", key="mob_nav_assist", use_container_width=True):
+                if st.button("💬 Assistant", key="mob_nav_assist", use_container_width=True):
                     st.session_state.mobile_tab = "assistant"
                     st.rerun()
         with cols[2]:
