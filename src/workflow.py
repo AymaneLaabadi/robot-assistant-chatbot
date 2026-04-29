@@ -40,20 +40,6 @@ class BaseWorkflow:
         self.response_mode = response_mode
         self.memory_service = services.memory_service
         self.llm_service = services.llm_service
-        self.robot_voice_service = services.robot_voice_service
-
-    def _speak_step(self, state: State) -> State:
-        """Send the LLM response text to the robot's speaker via the hub.
-
-        No audio bytes are produced here — the robot synthesises locally with
-        Cartesia. If HUB_URL/HUB_TOKEN are not set this is a no-op.
-        """
-        text = (state.response or "").strip()
-        if text and self.robot_voice_service.enabled:
-            result = self.robot_voice_service.speak(text)
-            if result.get("status") == "error":
-                print(f"[ROBOT VOICE] {result.get('message')}")
-        return state
 
     def _ensure_conversation(self, conversation_id: str | None) -> None:
         if conversation_id and not self.memory_service.exists(conversation_id):
@@ -123,12 +109,13 @@ class ChatWorkflow(BaseWorkflow):
         self.workflow = self._build_workflow()
 
     def _build_workflow(self):
+        # Text-only: no STT, no TTS, no robot voice. The chat widget displays
+        # the response in the browser; speaking on the robot belongs to
+        # AudioWorkflow.
         graph = StateGraph(State)
         graph.add_node("llm", self._llm_step)
-        graph.add_node("speak", self._speak_step)
         graph.add_edge(START, "llm")
-        graph.add_edge("llm", "speak")
-        graph.add_edge("speak", END)
+        graph.add_edge("llm", END)
         return graph.compile()
 
     def run(self, text: str, conversation_id: str | None = None) -> State:
@@ -155,26 +142,32 @@ class AudioWorkflow(BaseWorkflow):
         super().__init__(services=services, response_mode="voice")
         self.stt_service = services.stt_service
         self.tts_service = services.tts_service
+        self.robot_voice_service = services.robot_voice_service
         self.workflow = self._build_workflow()
 
     def _build_workflow(self):
+        # Audio flow: STT → LLM → speak. The "speak" step routes the response
+        # to the robot's speaker via the hub when configured, and falls back
+        # to in-browser TTS only if HUB_URL/HUB_TOKEN are absent (local dev).
         graph = StateGraph(State)
         graph.add_node("stt", self._stt_step)
         graph.add_node("llm", self._llm_step)
-        # The audio flow now speaks on the robot (speak_step) instead of
-        # generating audio bytes for the browser. The legacy tts step is
-        # kept as a fallback only when the hub is not configured.
-        graph.add_node("speak_or_tts", self._speak_or_tts_step)
+        graph.add_node("speak", self._speak_step)
         graph.add_edge(START, "stt")
         graph.add_edge("stt", "llm")
-        graph.add_edge("llm", "speak_or_tts")
-        graph.add_edge("speak_or_tts", END)
+        graph.add_edge("llm", "speak")
+        graph.add_edge("speak", END)
         return graph.compile()
 
-    def _speak_or_tts_step(self, state: State) -> State:
-        """Robot-speaker first; fall back to in-browser audio if hub absent."""
+    def _speak_step(self, state: State) -> State:
+        """Send the response to the robot's speaker; fall back to browser TTS."""
         if self.robot_voice_service.enabled:
-            return self._speak_step(state)
+            text = (state.response or "").strip()
+            if text:
+                result = self.robot_voice_service.speak(text)
+                if result.get("status") == "error":
+                    print(f"[ROBOT VOICE] {result.get('message')}")
+            return state
         return self._tts_step(state)
 
     def _stt_step(self, state: State) -> State:
