@@ -141,6 +141,38 @@ async def dispatch_navigation(
     return {"status": "sent", "destination": payload.get("destination")}
 
 
+@app.post("/dispatch/say")
+async def dispatch_say(
+    payload: dict[str, Any],
+    authorization: Optional[str] = Header(default=None),
+) -> dict[str, Any]:
+    """Forward a TTS request to the robot.
+
+    Payload:
+      {
+        "text": "Bonjour, je vous emmène à la Cafétéria.",
+        "lang": "fr"     // optional hint; the robot detects the language
+                         // automatically if absent.
+      }
+
+    The robot synthesises locally with Cartesia and streams audio to its
+    speaker — no audio bytes transit through this hub, only the text.
+    """
+    _check_bearer(authorization)
+    if robot.ws is None:
+        raise HTTPException(status_code=503, detail="robot not connected")
+    text = (payload.get("text") or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="empty text")
+    ok = await robot.send({
+        "type": "say",
+        "data": {"text": text, "lang": payload.get("lang")},
+    })
+    if not ok:
+        raise HTTPException(status_code=502, detail="failed to forward to robot")
+    return {"status": "sent", "chars": len(text)}
+
+
 # ───────────────────────── robot WebSocket ──────────────────────────────────
 
 
