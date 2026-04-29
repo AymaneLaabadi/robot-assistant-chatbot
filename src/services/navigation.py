@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import httpx
 import websocket
 
 from src.models import Destination
@@ -11,7 +12,23 @@ from src.services.location_catalog import LocationCatalogService
 
 
 class NavigationService:
-    """Service to handle destination lookup and navigation start requests."""
+    """Service to handle destination lookup and navigation start requests.
+
+    Two dispatch backends are supported:
+
+    1. **hub** (preferred) — POSTs the navigation payload to the Railway-hosted
+       robot-hub at ``HUB_URL/dispatch/navigation``, authenticated by
+       ``HUB_TOKEN``. The hub forwards it to the robot via its persistent
+       outbound WebSocket connection. No inbound port has to be exposed on
+       the robot side.
+
+    2. **rosbridge** (fallback / local dev) — opens a one-shot WebSocket to
+       ``ROSBRIDGE_URL`` and publishes the JSON on ``ROS_NAVIGATION_TOPIC``.
+
+    The hub backend is used whenever both ``HUB_URL`` and ``HUB_TOKEN`` are
+    set; otherwise the service falls back to rosbridge if ``ROSBRIDGE_URL`` is
+    set; otherwise the dispatch is skipped (useful for tests).
+    """
 
     def __init__(
         self,
@@ -21,7 +38,11 @@ class NavigationService:
         self.catalog = LocationCatalogService(locations_file=locations_file)
         self.history_file = Path(history_file)
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
-        self.rosbridge_url = os.getenv("ROSBRIDGE_URL", "ws://localhost:9090").strip()
+
+        self.hub_url = os.getenv("HUB_URL", "").strip().rstrip("/")
+        self.hub_token = os.getenv("HUB_TOKEN", "").strip()
+
+        self.rosbridge_url = os.getenv("ROSBRIDGE_URL", "").strip()
         self.navigation_topic = os.getenv("ROS_NAVIGATION_TOPIC", "/navigation_goal").strip()
 
     def list_locations(self):
@@ -119,27 +140,69 @@ class NavigationService:
             "floor": navigation_payload["floor"],
         }
 
-        # Send the command to ROS2 via rosbridge using a WebSocket connection
+        if self.hub_url and self.hub_token:
+            return self._dispatch_via_hub(command_payload)
+        if self.rosbridge_url:
+            return self._dispatch_via_rosbridge(command_payload)
+        return {
+            "status": "skipped",
+            "message": "No dispatch backend configured (set HUB_URL+HUB_TOKEN or ROSBRIDGE_URL).",
+            "payload": command_payload,
+        }
+
+    def _dispatch_via_hub(self, command_payload: dict) -> dict:
+        try:
+            response = httpx.post(
+                f"{self.hub_url}/dispatch/navigation",
+                json=command_payload,
+                headers={"Authorization": f"Bearer {self.hub_token}"},
+                timeout=5.0,
+            )
+            response.raise_for_status()
+            return {
+                "status": "sent",
+                "via": "hub",
+                "url": self.hub_url,
+                "response": response.json(),
+                "payload": command_payload,
+            }
+        except httpx.HTTPStatusError as exc:
+            return {
+                "status": "error",
+                "via": "hub",
+                "message": f"HTTP {exc.response.status_code}: {exc.response.text}",
+                "url": self.hub_url,
+            }
+        except Exception as exc:
+            return {
+                "status": "error",
+                "via": "hub",
+                "message": f"Failed to reach hub: {exc}",
+                "url": self.hub_url,
+            }
+
+    def _dispatch_via_rosbridge(self, command_payload: dict) -> dict:
         try:
             ws = websocket.create_connection(self.rosbridge_url)
             msg = {
                 "op": "publish",
                 "topic": self.navigation_topic,
                 "type": "std_msgs/String",
-                "msg": {"data": json.dumps(command_payload)}
+                "msg": {"data": json.dumps(command_payload)},
             }
             ws.send(json.dumps(msg))
             ws.close()
             return {
                 "status": "sent",
-                "message": "Navigation command sent to ROS2 via rosbridge.",
+                "via": "rosbridge",
                 "topic": self.navigation_topic,
                 "payload": command_payload,
             }
-        except Exception as e:
+        except Exception as exc:
             return {
                 "status": "error",
-                "message": f"Failed to send navigation command: {str(e)}",
+                "via": "rosbridge",
+                "message": f"Failed to send navigation command: {exc}",
                 "rosbridge_url": self.rosbridge_url,
                 "topic": self.navigation_topic,
             }
