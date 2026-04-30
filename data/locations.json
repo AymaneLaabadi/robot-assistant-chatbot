@@ -12,19 +12,7 @@
       "longitude": -74.006
     }
   },
-  {
-    "location_name": "Toilettes",
-    "category": "Sanitaires",
-    "aliases": ["wc", "toilettes", "bathroom", "restroom", "lavatory", "toilet", "sanitary facilities", "sanitaires"],
-    "description": "Toilettes pour les visiteurs et les étudiants.",
-    "building": "Bâtiment Emines",
-    "floor": "RDC",
-    "accessible": true,
-    "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
-    }
-  },
+
   {
     "location_name": "Accueil",
     "category": "Administratif",
@@ -42,15 +30,14 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
+      "latitude": 125,
+      "longitude": 50
     }
   },
   {
-    "location_name": "Administration",
+    "location_name": "Bureau du directeur",
     "category": "Administratif",
     "aliases": [
-      "bureau administration",
       "direction",
       "directeur",
       "director",
@@ -58,17 +45,17 @@
       "director office",
       "director's office"
     ],
-    "description": "Bureau principal de l'administration pour les démarches administratives.",
+    "description": "Bureau du directeur de l'EMINES",
     "building": "Bâtiment Emines",
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
+      "latitude": 111,
+      "longitude": 34.5
     }
   },
   {
-    "location_name": "Bureau d'Aide Financière",
+    "location_name": "Bureau d'assistante du directeur",
     "category": "Administratif",
     "aliases": [
       "aide financiere",
@@ -84,41 +71,61 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
+      "latitude": 111,
+      "longitude": 35.4
     }
   },
   {
-    "location_name": "Bureau des Admissions",
+    "location_name": "Bureau responsable des affaires externes",
     "category": "Administratif",
     "aliases": [
-      "admissions",
-      "inscription"
+      "affaires externes",
+      "relations internationales",
+      "partenariats",
+      "Meryem Maataoui",
+      "Meriem Maataoui"
+    ],
+    "description": "Bureau du responsable des affaires externes pour les relations internationales et les partenariats.",
+    "building": "Bâtiment Emines",
+    "floor": "RDC",
+    "accessible": true,
+    "coordinates": {
+      "latitude": 104.37,
+      "longitude": 37.2
+    }
+  },
+  {
+    "location_name": "Bureau responsable communication",
+    "category": "Administratif",
+    "aliases": [
+      "Saad khettab",
+      "communication office"
     ],
     "description": "Services des admissions, candidatures et inscriptions académiques.",
     "building": "Bâtiment Emines",
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
+      "latitude": 105,
+      "longitude": 32.7
     }
   },
   {
-    "location_name": "Affaires Étudiantes",
+    "location_name": "Bureau responsable scolarité",
     "category": "Administratif",
     "aliases": [
       "affaires etudiantes",
       "vie etudiante",
-      "student affairs"
+      "student affairs",
+      "Nouhaila Bamoussa"
     ],
-    "description": "Bureau des affaires étudiantes pour l'accompagnement de la vie sur campus.",
+    "description": "Bureau du responsable de la scolarité pour l'accompagnement des étudiants.",
     "building": "Bâtiment Emines",
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
+      "latitude": 81.4,
+      "longitude": 32.3
     }
   },
   {
@@ -134,8 +141,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7128,
-      "longitude": -74.006
+      "latitude": 125,
+      "longitude": 50
     }
   },
   {
@@ -156,8 +163,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7133,
-      "longitude": -74.0065
+      "latitude": 17.5,
+      "longitude": 7.8
     }
   },
   {
@@ -173,8 +180,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7131,
-      "longitude": -74.0063
+      "latitude": 46.2,
+      "longitude": 23.4
     }
   },
   {
@@ -190,8 +197,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.713,
-      "longitude": -74.0062
+      "latitude": 44.9,
+      "longitude": 23.1
     }
   },
   {
@@ -206,8 +213,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.713,
-      "longitude": -74.0062
+      "latitude": 15.5,
+      "longitude": 10
     }
   },
   {
@@ -226,24 +233,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7132,
-      "longitude": -74.0064
-    }
-  },
-  {
-    "location_name": "Radio Étudiante",
-    "category": "Média",
-    "aliases": [
-      "radio",
-      "studio radio"
-    ],
-    "description": "Studio de radio étudiante pour émissions, podcasts et productions audio.",
-    "building": "Bâtiment Emines",
-    "floor": "RDC",
-    "accessible": true,
-    "coordinates": {
-      "latitude": 40.7132,
-      "longitude": -74.0064
+      "latitude": 109,
+      "longitude": 44.5
     }
   },
   {
@@ -266,8 +257,8 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7132,
-      "longitude": -74.0064
+      "latitude": 74.9,
+      "longitude": 31
     }
   },
   {
@@ -286,44 +277,26 @@
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7134,
-      "longitude": -74.0066
+      "latitude": 9.5,
+      "longitude": 23.6
     }
   },
   {
-    "location_name": "Bureau E-olive",
+    "location_name": "Couloir des Clubs",
     "category": "Clubs",
     "aliases": [
-      "eolive",
-      "club e-olive",
-      "oliviers",
-      "huile d'olive"
+      "clubs",
+      "couloir clubs",
+      "espace clubs",
+      "club area"
     ],
-    "description": "Bureau du club E-olive part de E-solidarity pour l'activité de cultuvations d'oliviers du campus et pressage d'huile d'olive.",
+    "description": "Couloir des clubs",
     "building": "Bâtiment Emines",
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7134,
-      "longitude": -74.0066
-    }
-  },
-  {
-    "location_name": "Bureau E-mix",
-    "category": "Clubs",
-    "aliases": [
-      "emix",
-      "club e-mix",
-      "dj",
-      "mixing"
-    ],
-    "description": "Bureau du club E-mix pour le mixing musical et le DJing.",
-    "building": "Bâtiment Emines",
-    "floor": "RDC",
-    "accessible": true,
-    "coordinates": {
-      "latitude": 40.7134,
-      "longitude": -74.0066
+      "latitude": 97.2,
+      "longitude": 45.6
     }
   },
   {
@@ -332,15 +305,16 @@
     "aliases": [
       "impression",
       "photocopie",
-      "print"
+      "print",
+      "Orchi"
     ],
     "description": "Services d'impression, photocopies et documents pour les étudiants.",
     "building": "Bâtiment Emines",
     "floor": "RDC",
     "accessible": true,
     "coordinates": {
-      "latitude": 40.7133,
-      "longitude": -74.0065
+      "latitude": 49.7,
+      "longitude": 20.3
     }
   }
 ]

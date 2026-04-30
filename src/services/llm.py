@@ -135,7 +135,7 @@ class LLMService:
             You are speaking through the robot's audio output.
             Keep answers short, natural, and easy to read aloud.
             Prefer one to two short sentences.
-            Avoid markdown, long lists, and dense explanations unless the user explicitly asks for detail.
+            Avoid markdown, long enumerated lists, and dense explanations unless the user explicitly asks for detail.
         """
 
         self.agents = {
