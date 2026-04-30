@@ -114,6 +114,18 @@ def _build_word_boost(locations_file: str) -> list[str]:
 
 
 class SpeechToTextService:
+    # Maps a target term → the homophones AssemblyAI tends to pick instead.
+    # When the model hears any of the values, it will write the key.
+    # Add new mishearings here as you observe them in production.
+    _CUSTOM_SPELLINGS: dict[str, list[str]] = {
+        "EMINES": ["Emile", "Emin", "Emine", "Eminem", "amines", "Mines",
+                   "ay mines", "I mines", "a mines"],
+        "UM6P":   ["UM 6 P", "um six p", "Um six pee", "you m six p",
+                   "U M six P"],
+        "Cafétéria": ["cafeteria", "cafe teria", "kafeteria"],
+        "EMINES UM6P": ["Emile You M six P"],
+    }
+
     def __init__(self, locations_file: str = "data/locations.json"):
         self.word_boost = _build_word_boost(locations_file)
 
@@ -127,6 +139,7 @@ class SpeechToTextService:
             # confidence on them and ends up returning a null transcript.
             word_boost=self.word_boost,
         )
+        self._apply_custom_spelling(self.config)
 
         # Plain config used as a fallback if the boosted config triggers a
         # server-side validation error (different SDK versions interpret
@@ -136,9 +149,50 @@ class SpeechToTextService:
             language_detection=True,
             speaker_labels=True,
         )
+        # Keep the spelling-correction layer even on the fallback path —
+        # it's the most reliable fix for systematic homophones like
+        # EMINES → Emile.
+        self._apply_custom_spelling(self._fallback_config)
+
         self._boost_disabled = False
 
         self.transcriber = aai.Transcriber()
+
+    @classmethod
+    def _apply_custom_spelling(cls, config: "aai.TranscriptionConfig") -> None:
+        """Best-effort application of custom_spelling across SDK versions.
+
+        AssemblyAI exposes the feature differently depending on the SDK
+        version: a `set_custom_spelling({to: [from, ...]})` method on
+        recent releases, a `custom_spelling=[CustomSpelling(...)]`
+        attribute on older ones. We try both and silently skip if neither
+        works — STT still functions without it, just less accurately on
+        proper nouns.
+        """
+        if not cls._CUSTOM_SPELLINGS:
+            return
+
+        # Modern API: a single dict
+        setter = getattr(config, "set_custom_spelling", None)
+        if callable(setter):
+            try:
+                setter(cls._CUSTOM_SPELLINGS)
+                return
+            except Exception as exc:
+                print(f"[STT] set_custom_spelling failed: {exc!r}")
+
+        # Older API: list of CustomSpelling objects
+        try:
+            CustomSpelling = getattr(aai, "CustomSpelling", None) or getattr(
+                getattr(aai, "types", None), "CustomSpelling", None
+            )
+            if CustomSpelling is not None:
+                config.custom_spelling = [
+                    CustomSpelling(from_=variants, to=target)
+                    for target, variants in cls._CUSTOM_SPELLINGS.items()
+                ]
+        except Exception as exc:
+            print(f"[STT] legacy custom_spelling assignment failed: {exc!r}")
 
     def transcribe(self, audio_bytes: bytes) -> str:
         if not self._boost_disabled:
