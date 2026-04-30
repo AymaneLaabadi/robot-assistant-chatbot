@@ -63,6 +63,7 @@ def init_state(assistant) -> None:
     st.session_state.setdefault("mobile_tab", "lieux")
     st.session_state.setdefault("mobile_assistant_mode", None)
     st.session_state.setdefault("mobile_selected_location", None)
+    st.session_state.setdefault("mobile_nav_success_message", None)
     
     if "mobile_chat_id" not in st.session_state:
         st.session_state.mobile_chat_id = str(uuid.uuid4())
@@ -106,6 +107,10 @@ def render_navbar() -> None:
 
 def render_lieux(assistant) -> None:
     with st.container(key="mobile_lieux_content"):
+        if st.session_state.get("mobile_nav_success_message"):
+            st.success(st.session_state.mobile_nav_success_message)
+            st.session_state.mobile_nav_success_message = None
+        
         st.markdown(
             '<div class="mob-hero-title"><span class="mob-hero-icon">➤</span>Navigateur Robot Universitaire</div>',
             unsafe_allow_html=True
@@ -208,6 +213,7 @@ def render_location_modal(assistant) -> None:
                     st.session_state.last_navigation_command = payload
                     st.session_state.robot_status = f"Navigation vers {loc.location_name}"
                     st.session_state.selected_destination = loc.location_name
+                    st.session_state.mobile_nav_success_message = f"La navigation commencera vers {loc.location_name}"
             except Exception as exc:
                 LOGGER.exception("Mobile navigation failed: %s", exc)
                 st.error("Erreur lors du lancement.")
