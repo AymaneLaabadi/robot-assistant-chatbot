@@ -9,15 +9,17 @@ load_dotenv(override=True)
 aai.settings.api_key = os.getenv("ASSEMBLYAI_API_KEY")
 
 
-# ─────────────────────────── transcript post-processing ─────────────────────
+# ─────────────────────── transcript post-processing ─────────────────────────
 #
-# AssemblyAI doesn't know that "EMINES" is a proper noun, so it picks the
-# closest English word it knows ("Emile", "Eminem", …) regardless of the
-# user's language. We rewrite those after the fact. The patterns are
-# language-agnostic — they fire whether the surrounding sentence is FR,
-# EN or AR — because the mishearing is purely acoustic.
+# AssemblyAI doesn't know "EMINES" or "UM6P" as words, so on short audio it
+# picks the closest thing it does know — "Emile", "Eminem", "amines", or
+# "U M six P". We rewrite those mishearings to the canonical campus terms
+# *after* transcription, regardless of detected language. The pure regex
+# approach avoids any AssemblyAI SDK feature that might fail on different
+# versions (we tried word_boost / custom_spelling and both broke transcription
+# entirely on certain SDK builds).
 #
-# Add a new line here whenever you spot another consistent mishearing.
+# Add new mishearings here as you observe them in production.
 
 _EMINES_FIXUPS = re.compile(
     r"\b("
@@ -27,7 +29,7 @@ _EMINES_FIXUPS = re.compile(
     r"amines|"
     r"eminem|"
     r"i\s*mines?|ay\s*mines?|a\s*mines?|"
-    r"إيميل|إيمين|إيمينس"           # Arabic mishearings of EMINES
+    r"إيميل|إيمين|إيمينس"            # Arabic mishearings of EMINES
     r")\b",
     flags=re.IGNORECASE | re.UNICODE,
 )

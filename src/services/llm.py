@@ -67,26 +67,18 @@ class LLMService:
 
                 if result:
                     # Force the agent to follow up with a spoken confirmation.
-                    # Without this nudge, some agent loops finish on the bare
-                    # tool result and produce an empty final assistant message,
-                    # which means the robot's speaker stays silent after the
-                    # navigation goal is dispatched. Telling the agent
-                    # explicitly to produce a confirmation makes the followup
-                    # deterministic across SDK versions.
+                    # Without this, some agent loops finish on the tool result
+                    # alone and produce an empty final assistant message — which
+                    # means the robot speaker stays silent.
                     return (
                         f"DESTINATION_FOUND: {result['location_name']}. "
-                        f"You MUST now reply to the user, in the language of "
-                        f"the conversation, with a short single-sentence "
-                        f"confirmation telling them to follow you to "
-                        f"{result['location_name']} (e.g. "
-                        f"'Suivez-moi à la Cafétéria.' / "
-                        f"'Follow me to the Cafeteria.' / "
-                        f"'اتبعني إلى الكافتيريا'). "
-                        f"Do not stop at this tool result — produce the "
-                        f"confirmation message."
+                        f"You MUST now reply to the user, in the language of the conversation, "
+                        f"with a short single-sentence confirmation telling them to follow you "
+                        f"to {result['location_name']} (e.g. 'Suivez-moi à la Cafétéria.' / "
+                        f"'Follow me to the Cafeteria.' / 'اتبعني إلى الكافتيريا'). "
+                        f"Do not stop at this tool result — produce the confirmation message."
                     )
                 else:
-                    # Tell the LLM it failed so it uses your fallback prompt
                     return "LOCATION_NOT_FOUND"
 
             except Exception as e:
@@ -99,7 +91,7 @@ class LLMService:
 
         base_prompt = """
             ALWAYS reply in the same language as the user's query, whether it's English,French or Arabic.
-    
+
             You are a professional AI assistant integrated on a navigation robot for the EMINES school.
             Your main tasks are to provide information about the school and its programs, and to assist users in navigating the campus.
             You are friendly, direct, and practical.
@@ -117,9 +109,21 @@ class LLMService:
             The navigation tool can resolve close matches and aliases, so still use it when the user gives an approximate name, synonym, or common alias.
             If the tool returns LOCATION_NOT_FOUND, explain that you could not find the destination and suggest valid options such as Administration, cafereria or health center.
             When using the navigation tool, only provide the place name as input with no extra text.
-            If a destination is found, tell the user to "Follow me to the (destination name ALWAYS translated to the conversation's language". 
+            If a destination is found, tell the user to "Follow me to the (destination name ALWAYS translated to the conversation's language".
             Always use the destination names translated to the conversation's language when talking to the user.
             Do not describe the route. Do not give coordinates or directions. Never expose coordinates to the user.
+
+            LANGUAGE TAG (REQUIRED FORMAT)
+            ------------------------------
+            At the very end of every reply, append a hidden language tag in this
+            exact format: [lang:xx]   where xx is fr, en, or ar.
+            The tag corresponds to the language you used to write the reply.
+            Always include it. Never mention it. It is used internally for
+            text-to-speech voice selection and is stripped before display.
+            Examples:
+              "Suivez-moi à la Cafétéria. [lang:fr]"
+              "Follow me to the Cafeteria. [lang:en]"
+              "اتبعني إلى الكافتيريا [lang:ar]"
         """
 
         chat_prompt = """
