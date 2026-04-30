@@ -41,3 +41,7 @@ class State:
     conversation_id: Optional[str] = None
     response_audio: Optional[bytes] = None
     response_audio_format: Optional[str] = None
+    # Language code ("fr" | "en" | "ar") emitted by the LLM via the [lang:xx]
+    # tag at the end of its reply. The tag is stripped from `response` before
+    # storage/display; this field carries the parsed value for TTS routing.
+    detected_language: Optional[str] = None

@@ -1,3 +1,5 @@
+import re
+
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 
@@ -14,6 +16,21 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 import os
+
+
+# Matches the [lang:xx] tag the LLM appends to every reply.
+# We accept the tag anywhere in the message but it should be at the end.
+_LANG_TAG_RE = re.compile(r"\[\s*lang\s*:\s*(fr|en|ar)\s*\]", re.IGNORECASE)
+
+
+def _extract_lang_tag(text: str) -> tuple[str, str | None]:
+    """Strip the [lang:xx] tag from the LLM output and return (clean, lang)."""
+    if not text:
+        return text, None
+    match = _LANG_TAG_RE.search(text)
+    lang = match.group(1).lower() if match else None
+    cleaned = _LANG_TAG_RE.sub("", text).strip()
+    return cleaned, lang
 
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
@@ -82,8 +99,14 @@ class BaseWorkflow:
             tool_inputs={"query": query},
             response_mode=self.response_mode,
         )
-        state.response = response
-        self._persist_response(state.conversation_id, query, response or "")
+        # Pull the [lang:xx] tag out of the LLM reply before persisting and
+        # exposing the response to the UI/TTS. The tag carries the language
+        # the LLM used; downstream the speak step will pass it to the robot
+        # for deterministic voice selection.
+        clean_response, lang = _extract_lang_tag(response or "")
+        state.response = clean_response
+        state.detected_language = lang
+        self._persist_response(state.conversation_id, query, clean_response)
         return state
 
     def _history_as_dicts(self, conversation_id: str | None, fallback_response: str | None = None):
@@ -164,7 +187,9 @@ class AudioWorkflow(BaseWorkflow):
         if self.robot_voice_service.enabled:
             text = (state.response or "").strip()
             if text:
-                result = self.robot_voice_service.speak(text)
+                result = self.robot_voice_service.speak(
+                    text, lang=state.detected_language
+                )
                 if result.get("status") == "error":
                     print(f"[ROBOT VOICE] {result.get('message')}")
             return state

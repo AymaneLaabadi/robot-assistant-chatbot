@@ -91,7 +91,7 @@ class LLMService:
 
         base_prompt = """
             ALWAYS reply in the same language as the user's query, whether it's English,French or Arabic.
-    
+
             You are a professional AI assistant integrated on a navigation robot for the EMINES school.
             Your main tasks are to provide information about the school and its programs, and to assist users in navigating the campus.
             You are friendly, direct, and practical.
@@ -109,9 +109,21 @@ class LLMService:
             The navigation tool can resolve close matches and aliases, so still use it when the user gives an approximate name, synonym, or common alias.
             If the tool returns LOCATION_NOT_FOUND, explain that you could not find the destination and suggest valid options such as Administration, cafereria or health center.
             When using the navigation tool, only provide the place name as input with no extra text.
-            If a destination is found, tell the user to "Follow me to the (destination name ALWAYS translated to the conversation's language". 
+            If a destination is found, tell the user to "Follow me to the (destination name ALWAYS translated to the conversation's language".
             Always use the destination names translated to the conversation's language when talking to the user.
             Do not describe the route. Do not give coordinates or directions. Never expose coordinates to the user.
+
+            LANGUAGE TAG (REQUIRED FORMAT)
+            ------------------------------
+            At the very end of every reply, append a hidden language tag in this
+            exact format: [lang:xx]   where xx is fr, en, or ar.
+            The tag corresponds to the language you used to write the reply.
+            Always include it. Never mention it. It is used internally for
+            text-to-speech voice selection and is stripped before display.
+            Examples:
+              "Suivez-moi à la Cafétéria. [lang:fr]"
+              "Follow me to the Cafeteria. [lang:en]"
+              "اتبعني إلى الكافتيريا [lang:ar]"
         """
 
         chat_prompt = """
