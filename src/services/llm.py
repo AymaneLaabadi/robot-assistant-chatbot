@@ -33,7 +33,7 @@ class LocationInput(BaseModel):
 class LLMService:
     def __init__(self, rag_service: RAGService, navigation_service: Optional[NavigationService] = None):
         self.rag = rag_service
-        self.navigation_service = navigation_service or NavigationService()
+        self.navigation_service = NavigationService()
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
             temperature=0.3,
@@ -64,14 +64,23 @@ class LLMService:
                     location_name,
                     requested_by="llm_agent",
                 )
-                
+
                 if result:
-                    # Tell the LLM exactly what was found
-                    return f"DESTINATION_FOUND: {result['location_name']}"
+                    # Force the agent to follow up with a spoken confirmation.
+                    # Without this, some agent loops finish on the tool result
+                    # alone and produce an empty final assistant message — which
+                    # means the robot speaker stays silent.
+                    return (
+                        f"DESTINATION_FOUND: {result['location_name']}. "
+                        f"You MUST now reply to the user, in the language of the conversation, "
+                        f"with a short single-sentence confirmation telling them to follow you "
+                        f"to {result['location_name']} (e.g. 'Suivez-moi à la Cafétéria.' / "
+                        f"'Follow me to the Cafeteria.' / 'اتبعني إلى الكافتيريا'). "
+                        f"Do not stop at this tool result — produce the confirmation message."
+                    )
                 else:
-                    # Tell the LLM it failed so it uses your fallback prompt
                     return "LOCATION_NOT_FOUND"
-                    
+
             except Exception as e:
                 # Catch ANY hidden crashes (like missing attributes) and print to terminal
                 print(f"[NAV TOOL CRASH]: {e}")
