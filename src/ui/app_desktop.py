@@ -184,11 +184,12 @@ def normalize_category_key(category: str) -> str:
         return "clubs"
     if "service" in value:
         return "services"
-    if "sant" in value or "health" in value or "med" in value:
+    if "sant" in value or "health" in value:
         return "sante"
-    if "med" in value or "media" in value:
+    if "media" in value or "press" in value:
         return "media"
-    if "fun" in value or "lounge" in value or "relax" in value:
+    # Both the accented and unaccented forms — JSON uses "Détente".
+    if "détente" in value or "detente" in value or "lounge" in value or "relax" in value:
         return "detente"
     if "sanit" in value or "toilet" in value or "restroom" in value:
         return "sanitaires"
