@@ -113,6 +113,8 @@ class LLMService:
             Always use the destination names translated to the conversation's language when talking to the user.
             Do not describe the route. Do not give coordinates or directions. Never expose coordinates to the user.
 
+            If the user misspells EMINES as émile or anything similar, understand that they mean EMINES and answer accordingly.
+
             LANGUAGE TAG (REQUIRED FORMAT)
             ------------------------------
             At the very end of every reply, append a hidden language tag in this
@@ -123,7 +125,6 @@ class LLMService:
             Examples:
               "Suivez-moi à la Cafétéria. [lang:fr]"
               "Follow me to the Cafeteria. [lang:en]"
-              "اتبعني إلى الكافتيريا [lang:ar]"
         """
 
         chat_prompt = """
