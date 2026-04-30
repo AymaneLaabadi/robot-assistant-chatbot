@@ -75,7 +75,10 @@ class RAGService:
                 loader = PyMuPDFLoader(file_path)
                 docs = loader.load()
 
-            elif file_path.endswith(".txt"):
+            elif file_path.endswith((".txt", ".md", ".markdown")):
+                # Markdown is plain text; the splitter handles structure via
+                # separators. Avoids pulling in the unstructured + nltk
+                # dependency tree just to read MD.
                 loader = TextLoader(file_path, encoding="utf-8")
                 docs = loader.load()
 
