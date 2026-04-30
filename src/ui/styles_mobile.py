@@ -83,13 +83,13 @@ CSS = """
 .st-key-mobile_locations_grid [data-testid="stColumn"] > *,
 .st-key-mobile_locations_grid [data-testid="stColumn"] > * > * { position: static !important; margin: 0 !important; padding: 0 !important; }
 
-.mob-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 0.65rem; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); gap: 0.3rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+.mob-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding:  1rem ; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); gap: 0.3rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
 .st-key-mobile_locations_grid [data-testid="stColumn"]:hover .mob-card { border-color: #93c5fd; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.12); transform: translateY(-3px); }
 
 .mob-card-top { display: flex; align-items: center; gap: 0.4rem; width: 100%; }
 .mob-card-icon { font-size: 1rem; flex-shrink: 0; }
-.mob-card-name { font-weight: 700; color: #0f172a; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mob-card-cat { font-size: 0.55rem; color: #6d28d9; background: #ede9fe; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; align-self: flex-start; }
+.mob-card-name { font-weight: 700; color: #0f172a; font-size: 0.75rem; line-height: 1.3; word-break: break-word; overflow-wrap: break-word; flex: 1; }
+.mob-card-cat { font-size: 0.55rem; color: #6d28d9; background: #ede9fe; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; align-self: flex-end; }
 
 .st-key-mobile_locations_grid button { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; opacity: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; cursor: pointer; z-index: 10; color: transparent !important; line-height: 0 !important; font-size: 0 !important; }
 .st-key-mobile_locations_grid button:hover, .st-key-mobile_locations_grid button:focus, .st-key-mobile_locations_grid button:active { background: transparent !important; border: none !important; box-shadow: none !important; color: transparent !important; }

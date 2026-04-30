@@ -11,7 +11,9 @@ import streamlit as st
 from src.ui.app_desktop import (
     get_runtime, 
     state_value, 
-    get_destination_details
+    get_destination_details,
+    CATEGORY_PALETTE,
+    normalize_category_key
 )
 from src.components.voice_assistant import voice_assistant_orb
 from src.components.voice_bridge import handle_voice_request
@@ -51,6 +53,11 @@ def get_category_emoji(category: str) -> str:
     return f'<span class="destination-name-icon" aria-hidden="true">{icon}</span>'
 
 
+def get_category_colors(category: str) -> tuple[str, str]:
+    key = normalize_category_key(category)
+    return CATEGORY_PALETTE.get(key, ("#e2e8f0", "#334155"))
+
+
 
 def init_state(assistant) -> None:
     st.session_state.setdefault("mobile_tab", "lieux")
@@ -87,7 +94,7 @@ def render_navbar() -> None:
                     st.rerun()
         with cols[1]:
             with st.container(key="tab_assist"):
-                if st.button("💬 Assistant", key="mob_nav_assist", use_container_width=True):
+                if st.button("🗣️ Assistant", key="mob_nav_assist", use_container_width=True):
                     st.session_state.mobile_tab = "assistant"
                     st.rerun()
         with cols[2]:
@@ -142,6 +149,7 @@ def render_lieux(assistant) -> None:
                             loc = locations[idx]
                             with col:
                                 emoji = get_category_emoji(loc.category)
+                                bg_color, fg_color = get_category_colors(loc.category)
                                 st.markdown(
                                     f'''
                                     <div class="mob-card">
@@ -149,7 +157,7 @@ def render_lieux(assistant) -> None:
                                             <span class="mob-card-icon">{emoji}</span>
                                             <span class="mob-card-name">{loc.location_name}</span>
                                         </div>
-                                        <div class="mob-card-cat">{loc.category.upper()}</div>
+                                        <div class="mob-card-cat" style="background-color:{bg_color};color:{fg_color};">{loc.category.upper()}</div>
                                     </div>
                                     ''', 
                                     unsafe_allow_html=True
