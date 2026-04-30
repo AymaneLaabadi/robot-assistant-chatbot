@@ -51,7 +51,7 @@
     "accessible": true,
     "coordinates": {
       "latitude": 111,
-      "longitude": 34.5
+      "longitude": 33
     }
   },
   {
@@ -72,7 +72,7 @@
     "accessible": true,
     "coordinates": {
       "latitude": 111,
-      "longitude": 35.4
+      "longitude": 34
     }
   },
   {
@@ -83,7 +83,9 @@
       "relations internationales",
       "partenariats",
       "Meryem Maataoui",
-      "Meriem Maataoui"
+      "Meriem Maataoui",
+      "relations entreprises-Stage",
+      "Formation continue"
     ],
     "description": "Bureau du responsable des affaires externes pour les relations internationales et les partenariats.",
     "building": "Bâtiment Emines",
